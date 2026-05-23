@@ -3,8 +3,8 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 
 import { createApp } from "./app";
-import { env } from "./core/config/env";
 import { createRealtime } from "./core/realtime/realtime";
+import { env } from "@libs/config";
 
 const app = createApp();
 const httpServer = createServer(app);

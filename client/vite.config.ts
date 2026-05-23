@@ -4,6 +4,10 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  build: {
+    outDir: "../out/client",
+    emptyOutDir: true,
+  },
   plugins: [
     tanstackRouter({
       target: "react",
@@ -17,6 +21,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@core": new URL("./core", import.meta.url).pathname,
+      "@libs": new URL("./libs", import.meta.url).pathname,
       "@features": new URL("./features", import.meta.url).pathname,
       "@components": new URL("./components", import.meta.url).pathname,
       "@routes": new URL("./routes", import.meta.url).pathname,

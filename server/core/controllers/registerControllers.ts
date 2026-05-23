@@ -1,5 +1,6 @@
 import type { Express, RequestHandler } from "express";
 
+import { logger as rootLogger } from "@libs/logger";
 import type { BaseController, Ctx } from "./BaseController";
 
 type RegisterControllersOptions = {
@@ -19,10 +20,15 @@ export function registerControllers(
         async (req, res, next) => {
           try {
             const originSocketId = req.header("x-socket-id");
+            const requestContext = res.locals.context;
+            const logger = requestContext?.logger ?? rootLogger;
+            const requestId = requestContext?.requestId ?? "";
             const ctx: Ctx = {
               req,
               res,
               next,
+              logger,
+              requestId,
               realtime: originSocketId ? { originSocketId } : {}
             };
             const result = await route.handler.call(controller, ctx);

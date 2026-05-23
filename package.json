@@ -10,12 +10,12 @@
     "shared"
   ],
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "node --env-file=.env.local ./node_modules/.bin/turbo dev --env-mode=loose",
     "dev:client": "npm run dev -w client",
     "dev:server": "npm run dev -w server",
     "build": "turbo build",
-    "build:client": "npm run build -w client",
-    "build:server": "npm run build -w server",
+    "build:client": "turbo build --filter=client",
+    "build:server": "turbo build --filter=server",
     "test": "turbo test",
     "test:server": "npm run test -w server",
     "test:client": "npm run test -w client",

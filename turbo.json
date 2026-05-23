@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "routeTree.gen.ts"]
+      "outputs": ["dist/**", "../out/client/**", "../out/server/**", "routeTree.gen.ts"]
     },
     "dev": {
       "cache": false,

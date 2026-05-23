@@ -1,15 +1,18 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 
+import { resolveLocale, translate } from "@libs/i18n";
 import { AppError } from "./AppError";
 
-export const errorMiddleware: ErrorRequestHandler = (error, _req, res, _next) => {
+export const errorMiddleware: ErrorRequestHandler = (error, req, res, _next) => {
+  const locale = resolveLocale(req);
+
   if (error instanceof ZodError) {
     res.status(400).json({
       ok: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: "Invalid request data.",
+        message: translate(locale, "errors.validation"),
         details: error.flatten()
       }
     });
@@ -21,7 +24,7 @@ export const errorMiddleware: ErrorRequestHandler = (error, _req, res, _next) =>
       ok: false,
       error: {
         code: error.code,
-        message: error.message,
+        message: translate(locale, error.messageKey),
         details: error.details
       }
     });
@@ -32,7 +35,7 @@ export const errorMiddleware: ErrorRequestHandler = (error, _req, res, _next) =>
     ok: false,
     error: {
       code: "INTERNAL_SERVER_ERROR",
-      message: "Unexpected server error."
+      message: translate(locale, "errors.internal")
     }
   });
 };

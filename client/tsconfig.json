@@ -7,6 +7,7 @@
     "outDir": "dist",
     "paths": {
       "@core/*": ["./core/*"],
+      "@libs/*": ["./libs/*"],
       "@features/*": ["./features/*"],
       "@components/*": ["./components/*"],
       "@routes/*": ["./routes/*"]

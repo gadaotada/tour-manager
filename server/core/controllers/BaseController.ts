@@ -1,8 +1,9 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 
 import type { ApiResponse } from "@tour-manager/shared";
+import type { RequestContext } from "@libs/request-context";
 
-export type Ctx = {
+export type Ctx = RequestContext & {
   req: Request;
   res: Response;
   next: NextFunction;
@@ -11,8 +12,18 @@ export type Ctx = {
   };
 };
 
+export const ROUTE_METHOD = {
+  get: "get",
+  post: "post",
+  put: "put",
+  patch: "patch",
+  delete: "delete",
+} as const;
+
+export type RouteMethod = (typeof ROUTE_METHOD)[keyof typeof ROUTE_METHOD];
+
 export type ControllerRoute = {
-  method: "get" | "post" | "put" | "patch" | "delete";
+  method: RouteMethod;
   path: string;
   middlewares?: RequestHandler[];
   handler: (ctx: Ctx) => Promise<unknown> | unknown;

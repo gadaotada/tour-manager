@@ -9,6 +9,7 @@
     "outDir": "dist",
     "paths": {
       "@core/*": ["./core/*"],
+      "@libs/*": ["./libs/*"],
       "@features/*": ["./features/*"]
     },
     "types": ["node", "vitest/globals"]
