@@ -1,0 +1,18 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "paths": {
+      "@core/*": ["./core/*"],
+      "@features/*": ["./features/*"]
+    },
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}

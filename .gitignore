@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+.turbo
+.env
+.env.*
+client/routeTree.gen.ts
+playwright-report
+test-results

@@ -1,0 +1,25 @@
+{
+  "name": "@tour-manager/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup index.ts --format esm --clean && tsc -p tsconfig.build.json",
+    "dev": "tsup index.ts --format esm --dts --watch",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "paths": {
+      "@core/*": ["./core/*"],
+      "@features/*": ["./features/*"],
+      "@components/*": ["./components/*"],
+      "@routes/*": ["./routes/*"]
+    },
+    "types": ["vite/client", "vitest/globals"]
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["dist", "node_modules"]
+}
