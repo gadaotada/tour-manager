@@ -3,13 +3,13 @@ import type { AxiosAdapter } from "axios";
 
 import { ApiClientError, api } from "./apiClient";
 
-const adapterWithData = (data: unknown): AxiosAdapter => {
+const adapterWithData = (data: unknown, status = 200): AxiosAdapter => {
   return async (config) => ({
     config,
     data,
     headers: {},
-    status: 200,
-    statusText: "OK",
+    status,
+    statusText: status === 200 ? "OK" : "Error",
   });
 };
 
@@ -40,6 +40,38 @@ describe("api", () => {
         }),
       }),
     ).rejects.toBeInstanceOf(ApiClientError);
+  });
+
+  it("throws API client errors for non-2xx API error envelopes", async () => {
+    await expect(
+      api.json.post("/api/auth/login", { username: "x", password: "y" }, {
+        adapter: adapterWithData(
+          {
+            ok: false,
+            error: {
+              code: "INVALID_CREDENTIALS",
+              message: "Invalid username or password.",
+            },
+          },
+          401,
+        ),
+      }),
+    ).rejects.toMatchObject({
+      message: "Invalid username or password.",
+      payload: {
+        code: "INVALID_CREDENTIALS",
+        message: "Invalid username or password.",
+      },
+      status: 401,
+    });
+  });
+
+  it("returns undefined for 204 No Content void responses", async () => {
+    await expect(
+      api.json.post<void>("/api/auth/logout", undefined, {
+        adapter: adapterWithData(undefined, 204),
+      }),
+    ).resolves.toBeUndefined();
   });
 
   it("returns text responses", async () => {

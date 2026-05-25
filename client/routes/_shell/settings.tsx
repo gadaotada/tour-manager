@@ -1,0 +1,9 @@
+import { SettingsPage } from "@features/settings";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_shell/settings")({
+  staticData: {
+    titleKey: "pages.settings.title",
+  },
+  component: SettingsPage,
+});

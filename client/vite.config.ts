@@ -24,6 +24,7 @@ export default defineConfig({
       "@libs": new URL("./libs", import.meta.url).pathname,
       "@features": new URL("./features", import.meta.url).pathname,
       "@components": new URL("./components", import.meta.url).pathname,
+      "@hooks": new URL("./hooks", import.meta.url).pathname,
       "@routes": new URL("./routes", import.meta.url).pathname,
     },
   },

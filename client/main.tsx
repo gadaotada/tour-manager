@@ -2,8 +2,13 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
+import { bootstrapLocaleHeaderSync } from "@libs/i18n";
+import { initThemeStore } from "@libs/theme";
 import { routeTree } from "./routeTree.gen";
 import "./styles/app.css";
+
+initThemeStore();
+bootstrapLocaleHeaderSync();
 
 const router = createRouter({ routeTree });
 

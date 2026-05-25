@@ -1,7 +1,4 @@
-export {
-  APP_LANG_HEADER,
-  resolveLocale,
-} from "./locales";
+export { HTTP_HEADERS, resolveLocale } from "./locales";
 export {
   DEFAULT_LOCALE,
   SUPPORTED_LOCALES,

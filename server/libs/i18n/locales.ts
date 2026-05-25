@@ -1,14 +1,9 @@
 import type { Request } from "express";
-import { normalizeLocale, type Locale } from "@tour-manager/shared";
-
-const APP_LANG_HEADER = "app-lang";
+import { HTTP_HEADERS, normalizeLocale, type Locale } from "@tour-manager/shared";
 
 const resolveLocale = (req: Request): Locale => {
-  const header = req.header(APP_LANG_HEADER);
+  const header = req.header(HTTP_HEADERS.APP_LANG);
   return normalizeLocale(header);
 };
 
-export {
-  APP_LANG_HEADER,
-  resolveLocale,
-};
+export { HTTP_HEADERS, resolveLocale };

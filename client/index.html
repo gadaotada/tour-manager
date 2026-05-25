@@ -4,6 +4,43 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tour Manager</title>
+    <script>
+      (function () {
+        var key = "tour-manager.ui.theme";
+
+        try {
+          var raw = localStorage.getItem(key);
+          if (!raw) {
+            return;
+          }
+
+          var theme = "system";
+
+          try {
+            var parsed = JSON.parse(raw);
+            theme = parsed && parsed.state && parsed.state.theme ? parsed.state.theme : theme;
+          } catch {
+            theme = raw;
+          }
+
+          if (theme !== "dark" && theme !== "light" && theme !== "system") {
+            theme = "system";
+          }
+
+          var resolved =
+            theme === "system"
+              ? matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : theme;
+
+          var root = document.documentElement;
+          root.classList.add(resolved);
+          root.dataset.theme = resolved;
+          root.style.colorScheme = resolved;
+        } catch {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

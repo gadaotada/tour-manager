@@ -10,6 +10,7 @@
       "@libs/*": ["./libs/*"],
       "@features/*": ["./features/*"],
       "@components/*": ["./components/*"],
+      "@hooks/*": ["./hooks/*"],
       "@routes/*": ["./routes/*"]
     },
     "types": ["vite/client", "vitest/globals"]

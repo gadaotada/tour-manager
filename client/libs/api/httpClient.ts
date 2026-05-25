@@ -1,22 +1,22 @@
-import axios, { type AxiosError, type AxiosRequestConfig, type ResponseType } from "axios";
+import axios, { type AxiosError } from "axios";
+import { HTTP_HEADERS } from "@tour-manager/shared";
 
+import { resolveRequestLocale } from "@libs/i18n/request-locale";
 import { logger } from "@libs/logger";
 
 const apiLogger = logger.child({ area: "api" });
 
-type HttpResponseMode = Extract<ResponseType, "json" | "text">;
-
-const HTTP_RESPONSE_MODE = {
-  json: "json",
-  text: "text",
-} as const satisfies Record<HttpResponseMode, HttpResponseMode>;
-
 const httpClient = axios.create({
   withCredentials: true,
-  responseType: HTTP_RESPONSE_MODE.json,
+  responseType: "json",
   headers: {
     accept: "application/json",
   },
+});
+
+httpClient.interceptors.request.use((config) => {
+  config.headers.set(HTTP_HEADERS.APP_LANG, resolveRequestLocale());
+  return config;
 });
 
 httpClient.interceptors.response.use(
@@ -37,27 +37,8 @@ httpClient.interceptors.response.use(
   },
 );
 
-const jsonRequest = <T = unknown>(config: AxiosRequestConfig) => {
-  return httpClient.request<T>({
-    ...config,
-    responseType: HTTP_RESPONSE_MODE.json,
-    headers: {
-      accept: "application/json",
-      ...config.headers,
-    },
-  });
-};
+function setHttpClientDefaultHeader(name: string, value: string): void {
+  httpClient.defaults.headers.common[name] = value;
+}
 
-const textRequest = (config: AxiosRequestConfig) => {
-  return httpClient.request<string>({
-    ...config,
-    responseType: HTTP_RESPONSE_MODE.text,
-    headers: {
-      accept: "text/plain, text/html, */*",
-      ...config.headers,
-    },
-  });
-};
-
-export { HTTP_RESPONSE_MODE, httpClient, jsonRequest, textRequest };
-export type { HttpResponseMode };
+export { httpClient, setHttpClientDefaultHeader };

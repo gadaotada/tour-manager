@@ -23,7 +23,8 @@
     "coverage": "turbo coverage",
     "typecheck": "turbo typecheck",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "start": "node --env-file=.env.local out/server/index.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

@@ -1,0 +1,46 @@
+---
+description: Prefer standard Tailwind theme utilities over arbitrary values
+globs: client/**/*.{tsx,css}
+alwaysApply: false
+---
+
+# Tailwind Class Conventions
+
+Use named utilities from the Tailwind theme when the value exists on the scale. Reserve `[...]` arbitrary syntax for values with no matching utility.
+
+## Prefer theme utilities
+
+```tsx
+// Avoid
+className="lg:h-[4.5rem] lg:size-[1.125rem] p-[12px]"
+
+// Prefer
+className="lg:h-18 lg:size-4.5 p-3"
+```
+
+Check editor hints (`suggestCanonicalClasses`) before writing an arbitrary value.
+
+## When arbitrary values are appropriate
+
+- CSS variables: `grid-cols-[var(--app-sidebar-width)_minmax(0,1fr)]`
+- Complex expressions: `w-[min(320px,calc(100vw-2rem))]`
+- Properties without a utility: `transition-[grid-template-columns]`
+- Values off the scale with no close match (e.g. a one-off 360px column)
+
+## Reused off-scale values
+
+If the same non-scale value appears more than once, add it to `@theme` in `client/styles/app.css` instead of repeating `[...]` literals.
+
+```css
+@theme inline {
+  --width-login-form: 360px;
+}
+```
+
+```tsx
+className="lg:grid-cols-[1fr_var(--width-login-form)]"
+```
+
+## Generated UI primitives
+
+Shadcn/Radix components may keep precise arbitrary math for third-party alignment. Do not rewrite those unless fixing a lint warning or the value maps cleanly to the theme.

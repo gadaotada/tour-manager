@@ -1,6 +1,7 @@
+import { HTTP_HEADERS } from "@tour-manager/shared";
 import type { Logger } from "@tour-manager/shared";
 
-const REQUEST_ID_HEADER = "x-request-id";
+const REQUEST_ID_HEADER = HTTP_HEADERS.REQUEST_ID;
 
 type RequestContext = {
   logger: Logger;

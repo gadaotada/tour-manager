@@ -6,12 +6,13 @@ import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
 
-import { registerControllers } from "./core/controllers/registerControllers";
-import { errorMiddleware } from "./core/http/errorMiddleware";
-import { requestContextMiddleware } from "./core/http/requestContextMiddleware";
+import { registerControllers } from "@core/controllers";
+import { errorMiddleware, requestContextMiddleware } from "./core/http";
+import { authController } from "./features/auth";
 import { healthController } from "./features/health/health.controller";
 import { env } from "@libs/config";
 import { logger } from "@libs/logger";
+import { sessionMiddleware } from "@libs/sessions";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,9 +23,18 @@ export function createApp(): Express {
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
+  app.use(sessionMiddleware);
   app.use(requestContextMiddleware(logger));
 
-  registerControllers(app, [healthController], { apiPrefix: "/api" });
+  registerControllers(
+    app,
+    [
+      authController,
+      healthController,
+      // Other controllers would be registered here
+    ],
+    { apiPrefix: "/api" },
+  );
 
   if (env.nodeEnv === "production") {
     const clientDist = path.resolve(dirname, "../client");
