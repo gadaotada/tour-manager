@@ -14,10 +14,12 @@ export default defineConfig({
     }
   },
   resolve: {
+    conditions: ["development"],
     alias: {
+      "@tour-manager/shared": new URL("../shared/index.ts", import.meta.url).pathname,
       "@core": new URL("./core", import.meta.url).pathname,
       "@libs": new URL("./libs", import.meta.url).pathname,
-      "@features": new URL("./features", import.meta.url).pathname
-    }
-  }
+      "@features": new URL("./features", import.meta.url).pathname,
+    },
+  },
 });

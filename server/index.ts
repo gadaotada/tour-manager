@@ -1,20 +1,24 @@
 import { createServer } from "node:http";
-import { Server } from "socket.io";
 
+import { wsGateway } from "@core/realtime";
 import { createApp } from "./app";
-import { createRealtime } from "./core/realtime/realtime";
+import { authService } from "./features/auth/auth.service";
 import { env } from "@libs/config";
+import { sessionMiddleware } from "@libs/sessions";
 
 const app = createApp();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: env.clientOrigin,
-    credentials: true
-  }
-});
 
-createRealtime(io);
+try {
+  wsGateway.initialize({
+    allowedOrigins: [env.clientOrigin],
+    httpServer,
+    resolveUser: (userId) => authService.getCurrentUser(userId),
+    sessionMiddleware,
+  });
+} catch (error) {
+  console.error("Realtime init failed. Continuing without realtime.", error);
+}
 
 httpServer.listen(env.port, () => {
   console.log(`Server listening on http://localhost:${env.port}`);

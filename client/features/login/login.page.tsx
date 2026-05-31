@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm, type Resolver } from "react-hook-form";
+import { useForm, type FieldErrors, type Resolver, type ResolverResult } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
 import type { LoginInput } from "@tour-manager/shared";
 import { loginSchema } from "@tour-manager/shared";
@@ -117,25 +117,25 @@ const loginFormResolver: Resolver<LoginInput> = async (values) => {
   const parsed = loginSchema.safeParse(values);
 
   if (parsed.success) {
-    return {
-      errors: {},
-      values: parsed.data,
+    return { values: parsed.data, errors: {} };
+  }
+
+  const errors: FieldErrors<LoginInput> = {};
+
+  for (const issue of parsed.error.issues) {
+    const field = issue.path[0];
+    if (field !== "username" && field !== "password") continue;
+    if (errors[field]) continue;
+
+    errors[field] = {
+      message: t("login.validation.required"),
+      type: "validation",
     };
   }
 
-  return {
-    errors: {
-      password: {
-        message: t("login.validation.required"),
-        type: "validation",
-      },
-      username: {
-        message: t("login.validation.required"),
-        type: "validation",
-      },
-    },
-    values: {},
-  };
+  // Keep the submitted shape — returning `values: {}` makes RHF call `unset` on
+  // null/undefined internals and throws "Cannot convert undefined or null to object".
+  return { values, errors } as ResolverResult<LoginInput>;
 };
 
 export { LoginPage };

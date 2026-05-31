@@ -7,8 +7,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@components/ui/dropdown-menu";
-import { t, useLocaleStore } from "@libs/i18n";
-import type { Locale } from "@tour-manager/shared";
+import { t, useLocaleStore, type Locale } from "@libs/i18n";
 
 import { PreferenceMenuTrigger } from "./preference-menu-trigger";
 

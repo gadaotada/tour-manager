@@ -1,23 +1,17 @@
-import { BaseController } from "@core/controllers";
+import { createAppController } from "@core/controllers";
 
 import { healthService } from "./health.service";
 
-class HealthController extends BaseController {
-  basePath = "/health";
-  baseMiddlewares = [];
+const healthController = createAppController("/health")
+    .GET("")
+        .handle((ctx) => {
+            const health = healthService.getHealth(ctx.logger.child({ area: "health" }));
+            ctx.reply.success({ data: health });
+        })
+    .PUT("/simulate-error")
+        .handle((ctx) => {
+            healthService.simulateError(ctx.logger.child({ area: "health" }));
+            ctx.reply.success({ data: { message: "Error simulated" } });
+        });
 
-  routes = [
-    this.get("", async (ctx) => {
-      return this.ok(
-        healthService.getHealth(ctx.logger.child({ area: "health" })),
-      );
-    }),
-
-    this.put("/simulate-error", async (ctx) => {
-      healthService.simulateError(ctx.logger.child({ area: "health" }));
-      return this.ok({ message: "Error simulated" });
-    }),
-  ];
-}
-
-export const healthController = new HealthController();
+export { healthController };

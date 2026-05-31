@@ -1,4 +1,4 @@
-import type { MessageKey } from "@tour-manager/shared";
+import type { MessageKey } from "@libs/i18n";
 import type { LucideIcon } from "lucide-react";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 

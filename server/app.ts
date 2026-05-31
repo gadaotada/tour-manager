@@ -7,7 +7,7 @@ import express, { type Express } from "express";
 import helmet from "helmet";
 
 import { registerControllers } from "@core/controllers";
-import { errorMiddleware, requestContextMiddleware } from "./core/http";
+import { errorMiddleware, requestContextMiddleware } from "@core/http";
 import { authController } from "./features/auth";
 import { healthController } from "./features/health/health.controller";
 import { env } from "@libs/config";

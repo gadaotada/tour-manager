@@ -1,41 +1,38 @@
 import type { ErrorRequestHandler } from "express";
-import { ZodError } from "zod";
 
-import { resolveLocale, translate } from "@libs/i18n";
-import { AppError } from "./AppError";
+import { DbError } from "@libs/db";
+import { resolveLocale } from "@libs/i18n";
+
+import { getRequestContext } from "./requestContext";
+import {
+    negotiateResponseType,
+    resolveClientErrorStatus,
+    sendBody,
+    serializeClientError,
+} from "./responseFormat";
 
 export const errorMiddleware: ErrorRequestHandler = (error, req, res, _next) => {
-  const locale = resolveLocale(req);
+    if (res.headersSent) return;
 
-  if (error instanceof ZodError) {
-    res.status(400).json({
-      ok: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: translate(locale, "errors.validation"),
-        details: error.flatten()
-      }
-    });
-    return;
-  }
+    const locale = resolveLocale(req);
+    const status = resolveClientErrorStatus(error);
+    const clientError = serializeClientError(error, locale);
+    const responseType = negotiateResponseType(req);
 
-  if (error instanceof AppError) {
-    res.status(error.statusCode).json({
-      ok: false,
-      error: {
-        code: error.code,
-        message: translate(locale, error.messageKey),
-        details: error.details
-      }
-    });
-    return;
-  }
-
-  res.status(500).json({
-    ok: false,
-    error: {
-      code: "INTERNAL_SERVER_ERROR",
-      message: translate(locale, "errors.internal")
+    if (status >= 500) {
+        getRequestContext(res).logger.error(
+            {
+                err: error,
+                ...(error instanceof DbError
+                    ? { dbCode: error.publicError.code, cause: error.publicError.cause }
+                    : {}),
+            },
+            "Server error in request pipeline",
+            { report: true },
+        );
     }
-  });
+
+    const body = responseType === "json" ? { ok: false as const, error: clientError } : clientError.message;
+
+    sendBody(res, status, responseType, body);
 };

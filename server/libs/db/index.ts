@@ -8,6 +8,7 @@ export {
 export {
   PAGINATION_LIMITS,
   buildPaginatedResult,
+  type PaginatedResult,
   normalizePagination,
 } from "./paginations";
 

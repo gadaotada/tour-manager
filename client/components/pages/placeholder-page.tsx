@@ -1,6 +1,4 @@
-import type { MessageKey } from "@tour-manager/shared";
-
-import { t } from "@libs/i18n";
+import { t, type MessageKey } from "@libs/i18n";
 
 type PlaceholderPageProps = {
   emptyKey: MessageKey;

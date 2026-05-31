@@ -1,54 +1,46 @@
 import { loginSchema } from "@tour-manager/shared";
-import { BaseController } from "@core/controllers";
+import { createAppController } from "@core/controllers";
 import { unauthenticatedError } from "@core/http";
-import { validateRequest } from "@core/validation/validateRequest";
 import { env } from "@libs/config";
 
 import { authService } from "./auth.service";
 import { destroySession, regenerateSession, saveSession } from "./auth.session";
 
-class AuthController extends BaseController {
-  basePath = "/auth";
+const authController = createAppController("/auth")
+    .POST("/login")
+        .schemas({ body: loginSchema })
+        .handle(async (ctx) => {
+            const user = await authService.login(ctx.parsed.body);
 
-  routes = [
-    this.post("/login", async (ctx) => {
-      const { body } = validateRequest(ctx.req, { body: loginSchema });
-      const user = await authService.login(body);
+            await regenerateSession(ctx.req);
+            ctx.req.session.userId = user.id;
+            await saveSession(ctx.req);
 
-      await regenerateSession(ctx.req);
-      ctx.req.session.userId = user.id;
-      await saveSession(ctx.req);
+            ctx.reply.success({ data: { user } });
+        })
+    .POST("/logout")
+        .handle(async (ctx) => {
+            await destroySession(ctx.req);
+            ctx.res.clearCookie(env.sessionCookieName);
 
-      return this.ok({ user });
-    }),
+            ctx.reply.noContent();
+        })
+        
+    .GET("/me")
+        .handle(async (ctx) => {
+            const userId = ctx.req.session.userId;
 
-    this.post("/logout", async (ctx) => {
-      await destroySession(ctx.req);
-      ctx.res.clearCookie(env.sessionCookieName);
+            if (!userId) throw unauthenticatedError();
 
-      return this.noContent();
-    }),
+            const user = await authService.getCurrentUser(userId);
 
-    this.get("/me", async (ctx) => {
-      const userId = ctx.req.session.userId;
+            if (!user) {
+                await destroySession(ctx.req);
+                ctx.res.clearCookie(env.sessionCookieName);
+                throw unauthenticatedError();
+            }
 
-      if (!userId) {
-        throw unauthenticatedError();
-      }
-
-      const user = await authService.getCurrentUser(userId);
-
-      if (!user) {
-        await destroySession(ctx.req);
-        ctx.res.clearCookie(env.sessionCookieName);
-        throw unauthenticatedError();
-      }
-
-      return this.ok({ user });
-    }),
-  ];
-}
-
-const authController = new AuthController();
+            ctx.reply.success({ data: { user } });
+        });
 
 export { authController };

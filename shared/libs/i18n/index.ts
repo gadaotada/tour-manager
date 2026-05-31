@@ -1,9 +1,9 @@
 export {
-  DEFAULT_LOCALE,
-  SUPPORTED_LOCALES,
-  type Locale,
-  isLocale,
-  normalizeLocale,
+    DEFAULT_LOCALE,
+    SUPPORTED_LOCALES,
+    type Locale,
+    isLocale,
+    normalizeLocale,
 } from "./locales";
-export { type MessageKey, messages } from "./messages";
-export { translate } from "./translate";
+export { commonMessages } from "./commonMessages";
+export { createTranslator, translate, type MessageKeyOf } from "./translate";

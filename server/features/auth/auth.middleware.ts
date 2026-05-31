@@ -1,55 +1,43 @@
-import type { Request, RequestHandler } from "express";
+import type { Request } from "express";
 import type { ClientUser, Permission } from "@tour-manager/shared";
 import { hasPermission } from "@tour-manager/shared";
 
+import type { AppMiddleware, RouteMiddleware } from "@core/controllers";
 import { forbiddenError, unauthenticatedError } from "@core/http";
 
 import { authService } from "./auth.service";
 import { destroySession } from "./auth.session";
 
-const requireAuth: RequestHandler = async (req, res, next) => {
-  try {
-    const user = await getSessionUser(req);
-    res.locals.currentUser = user;
-    next();
-  } catch (error) {
-    next(error);
-  }
+const requireAuth: AppMiddleware<{ user: ClientUser }> = async (ctx) => {
+    const user = await getSessionUser(ctx.req);
+    return { user };
 };
 
-function requirePermission(permission: Permission): RequestHandler {
-  return async (req, res, next) => {
-    try {
-      const user = await getSessionUser(req);
+function requirePermission(permission: Permission): RouteMiddleware<object, { user: ClientUser }> {
+    return (ctx) => {
+        if (!hasPermission(ctx.user.permissions, permission)) {
+            throw forbiddenError();
+        }
 
-      if (!hasPermission(user.permissions, permission)) {
-        next(forbiddenError());
-        return;
-      }
-
-      res.locals.currentUser = user;
-      next();
-    } catch (error) {
-      next(error);
-    }
-  };
+        return ctx.proceed();
+    };
 }
 
 async function getSessionUser(req: Request): Promise<ClientUser> {
-  const userId = req.session.userId;
+    const userId = req.session.userId;
 
-  if (!userId) {
-    throw unauthenticatedError();
-  }
+    if (!userId) {
+        throw unauthenticatedError();
+    }
 
-  const user = await authService.getCurrentUser(userId);
+    const user = await authService.getCurrentUser(userId);
 
-  if (!user) {
-    await destroySession(req);
-    throw unauthenticatedError();
-  }
+    if (!user) {
+        await destroySession(req);
+        throw unauthenticatedError();
+    }
 
-  return user;
+    return user;
 }
 
 export { requireAuth, requirePermission };

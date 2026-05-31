@@ -1,6 +1,4 @@
-import type { MessageKey } from "@tour-manager/shared";
-
-import { t } from "@libs/i18n";
+import { t, type MessageKey } from "@libs/i18n";
 import { cn } from "@libs/utils";
 
 import { mainNavItems, operationsNavItems } from "./nav-items";
@@ -41,7 +39,7 @@ type SidebarGroupProps = {
 
 function SidebarGroup({ isExpanded, items, labelKey }: SidebarGroupProps) {
   return (
-    <div className={cn("space-y-2 px-1", !isExpanded && "w-full")}>
+    <div className={cn("space-y-2 px-2", !isExpanded && "w-full")}>
       {isExpanded ? (
         <p className="px-2 text-xs font-medium text-muted-foreground lg:text-sm">
           {t(labelKey)}

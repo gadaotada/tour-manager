@@ -61,4 +61,5 @@ export {
     PAGINATION_LIMITS,
     normalizePagination,
     buildPaginatedResult,
+    type PaginatedResult,
 };

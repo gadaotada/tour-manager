@@ -1,5 +1,6 @@
 import { api } from "@libs/api";
 import { authStore } from "@core/stores";
+import { disconnectRealtime } from "@libs/realtime";
 import type { ClientUser, LoginInput } from "@tour-manager/shared";
 
 type AuthUserResponse = {
@@ -41,6 +42,7 @@ async function logout(): Promise<void> {
   try {
     await api.json.post<null>("/api/auth/logout");
   } finally {
+    disconnectRealtime();
     authStore.getState().clearUser();
   }
 }

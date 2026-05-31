@@ -11,7 +11,7 @@ const envSchema = z.object({
   APP_RELEASE: z.string().optional(),
   DB_HOST: z.string().default("localhost"),
   DB_PORT: z.coerce.number().int().positive().default(3306),
-  DB_USER: z.string().default("postgres"),
+  DB_USER: z.string().default("root"),
   DB_PASSWORD: z.string().default("password"),
   DB_NAME: z.string().default("tour_manager"),
   DB_CONNECT_TIMEOUT: z.coerce.number().int().positive().default(10000), // 10 seconds

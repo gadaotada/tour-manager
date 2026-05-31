@@ -19,7 +19,9 @@ export default defineConfig({
     tailwindcss(),
   ],
   resolve: {
+    conditions: ["development"],
     alias: {
+      "@tour-manager/shared": new URL("../shared/index.ts", import.meta.url).pathname,
       "@core": new URL("./core", import.meta.url).pathname,
       "@libs": new URL("./libs", import.meta.url).pathname,
       "@features": new URL("./features", import.meta.url).pathname,
@@ -35,7 +37,7 @@ export default defineConfig({
         target: "http://localhost:3000",
         changeOrigin: true,
       },
-      "/socket.io": {
+      "/ws": {
         target: "http://localhost:3000",
         ws: true,
       },

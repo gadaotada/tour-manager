@@ -3,16 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "types": "./dist/index.d.ts",
+  "types": "./index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./index.ts",
+      "development": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
     "build": "tsup index.ts --format esm --clean && tsc -p tsconfig.build.json",
-    "dev": "tsup index.ts --format esm --watch & tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "dev": "tsc --noEmit --watch --preserveWatchOutput",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit"

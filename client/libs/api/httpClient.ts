@@ -3,6 +3,7 @@ import { HTTP_HEADERS } from "@tour-manager/shared";
 
 import { resolveRequestLocale } from "@libs/i18n/request-locale";
 import { logger } from "@libs/logger";
+import { getRealtimeSocketId } from "@libs/realtime";
 
 const apiLogger = logger.child({ area: "api" });
 
@@ -16,6 +17,12 @@ const httpClient = axios.create({
 
 httpClient.interceptors.request.use((config) => {
   config.headers.set(HTTP_HEADERS.APP_LANG, resolveRequestLocale());
+
+  const socketId = getRealtimeSocketId();
+  if (socketId && !config.headers.has(HTTP_HEADERS.SOCKET_ID)) {
+    config.headers.set(HTTP_HEADERS.SOCKET_ID, socketId);
+  }
+
   return config;
 });
 

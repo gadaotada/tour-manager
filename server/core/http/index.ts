@@ -7,4 +7,9 @@ export {
 } from "./authErrors";
 export { toDbAppError } from "./appErrors";
 export { errorMiddleware } from "./errorMiddleware";
-export { requestContextMiddleware } from "./requestContextMiddleware";
+export {
+    type RequestContext,
+    attachRequestContext,
+    getRequestContext,
+    requestContextMiddleware,
+} from "./requestContext";

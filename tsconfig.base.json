@@ -5,13 +5,13 @@
     "module": "ESNext",
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
     "useDefineForClassFields": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "customConditions": ["development"]
   }
 }
