@@ -17,7 +17,7 @@ class RealtimeClient {
   private pendingMessages: RealtimeClientMessage[] = [];
   private routeScope: RouteRealtimeScope | null = null;
   private socket: WebSocket | null = null;
-  private socketId: string | null = null;
+  private socket_id: string | null = null;
   private state: RealtimeConnectionState = "idle";
 
   connect(): void {
@@ -49,7 +49,7 @@ class RealtimeClient {
     socket.onclose = () => {
       if (this.socket === socket) {
         this.socket = null;
-        this.socketId = null;
+        this.socket_id = null;
         this.state = "closed";
       }
     };
@@ -62,7 +62,7 @@ class RealtimeClient {
   disconnect(): void {
     this.pendingMessages = [];
     this.routeScope = null;
-    this.socketId = null;
+    this.socket_id = null;
 
     if (!this.socket) {
       this.state = "closed";
@@ -75,7 +75,7 @@ class RealtimeClient {
   }
 
   getSocketId(): string | null {
-    return this.socketId;
+    return this.socket_id;
   }
 
   joinScope(scope: RouteRealtimeScope): void {
@@ -161,7 +161,7 @@ class RealtimeClient {
         return;
       }
 
-      this.socketId = parsed.data.socketId;
+      this.socket_id = parsed.data.socket_id;
     }
 
     const listeners = this.listenersByType.get(message.type);

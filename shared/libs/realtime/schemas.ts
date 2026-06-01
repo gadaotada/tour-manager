@@ -21,8 +21,8 @@ const realtimeClientMessageSchema = z.discriminatedUnion("type", [
 
 const realtimeConnectedMessageSchema = z.object({
   type: z.literal("realtime.connected"),
-  userId: z.string().min(1),
-  socketId: z.string().min(1),
+  user_id: z.string().min(1),
+  socket_id: z.string().min(1),
   scopes: z.array(realtimeScopeSchema),
 });
 

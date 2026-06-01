@@ -13,8 +13,8 @@ class DbSessionStore extends session.Store {
     callback: (err: unknown, session?: SessionData | null) => void,
   ): void {
     query(async (qe) => {
-      const result = await qe.read<SessionRow>(
-        QUERY_MODE.execute,
+      const rows = await qe.read<SessionRow>(
+        "execute",
         `
           SELECT data, expires_at
           FROM sessions
@@ -22,15 +22,9 @@ class DbSessionStore extends session.Store {
           LIMIT 1
         `,
         [sid],
-        { shouldThrow: true },
       );
 
-      if (!result.ok || result.rows.length === 0) {
-        callback(null, null);
-        return;
-      }
-
-      const row = result.rows[0];
+      const row = rows[0];
       if (!row) {
         callback(null, null);
         return;
@@ -47,7 +41,7 @@ class DbSessionStore extends session.Store {
       const expiresAt = getSessionExpiresAt(sessionData);
 
       await qe.mutate(
-        QUERY_MODE.execute,
+        "execute",
         `
           INSERT INTO sessions (sid, data, expires_at)
           VALUES (?, ?, ?)
@@ -56,7 +50,7 @@ class DbSessionStore extends session.Store {
             expires_at = VALUES(expires_at)
         `,
         [sid, JSON.stringify(sessionData), expiresAt],
-        { shouldThrow: true },
+        
       );
 
       callback?.();
@@ -68,10 +62,10 @@ class DbSessionStore extends session.Store {
   destroy(sid: string, callback?: (err?: unknown) => void): void {
     query(async (qe) => {
       await qe.mutate(
-        QUERY_MODE.execute,
+        "execute",
         "DELETE FROM sessions WHERE sid = ?",
         [sid],
-        { shouldThrow: true },
+        
       );
 
       callback?.();
@@ -83,10 +77,10 @@ class DbSessionStore extends session.Store {
   touch(sid: string, sessionData: SessionData, callback?: (err?: unknown) => void): void {
     query(async (qe) => {
       await qe.mutate(
-        QUERY_MODE.execute,
+        "execute",
         "UPDATE sessions SET expires_at = ? WHERE sid = ?",
         [getSessionExpiresAt(sessionData), sid],
-        { shouldThrow: true },
+        
       );
 
       callback?.();

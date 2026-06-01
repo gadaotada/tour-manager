@@ -2,7 +2,7 @@ import type { ExecuteValues } from "mysql2";
 import type { PermissionOverride } from "@tour-manager/shared";
 import { isPermission, isPermissionEffect } from "@tour-manager/shared";
 
-import { QUERY_MODE, query } from "@libs/db";
+import { query } from "@libs/db";
 
 type UserRow = {
   id: string;
@@ -47,22 +47,17 @@ async function findUserPermissionOverrides(
   userId: string,
 ): Promise<PermissionOverride[]> {
   return query(async (qe) => {
-    const result = await qe.read<PermissionOverrideRow>(
-      QUERY_MODE.execute,
+    const rows = await qe.read<PermissionOverrideRow>(
+      "execute",
       `
         SELECT permission, effect
         FROM user_permission_overrides
         WHERE user_id = ?
       `,
       [userId],
-      { shouldThrow: true },
     );
 
-    if (!result.ok) {
-      return [];
-    }
-
-    return result.rows.flatMap((row) => {
+    return rows.flatMap((row) => {
       if (!isPermission(row.permission) || !isPermissionEffect(row.effect)) {
         return [];
       }
@@ -74,14 +69,9 @@ async function findUserPermissionOverrides(
 
 async function findUser(sql: string, values: ExecuteValues): Promise<UserRow | null> {
   return query(async (qe) => {
-    const result = await qe.read<UserRow>(
-      QUERY_MODE.execute,
-      sql,
-      values,
-      { shouldThrow: true },
-    );
+    const rows = await qe.read<UserRow>("execute", sql, values);
 
-    return result.ok ? result.rows[0] ?? null : null;
+    return rows[0] ?? null;
   });
 }
 

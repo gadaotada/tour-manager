@@ -24,13 +24,13 @@ function requirePermission(permission: Permission): RouteMiddleware<object, { us
 }
 
 async function getSessionUser(req: Request): Promise<ClientUser> {
-    const userId = req.session.userId;
+    const user_id = req.session.user_id;
 
-    if (!userId) {
+    if (!user_id) {
         throw unauthenticatedError();
     }
 
-    const user = await authService.getCurrentUser(userId);
+    const user = await authService.getCurrentUser(user_id);
 
     if (!user) {
         await destroySession(req);

@@ -23,9 +23,16 @@ type DBReadErr = {
 
 type DbReadResult<T> = DbReadOk<T> | DBReadErr;
 
-type DbMutateOk = {
+type DbMutateHeaderOk = {
     ok: true;
     result: ResultSetHeader;
+    error: null;
+};
+
+type DbMutateWithRowsOk<TRow> = {
+    ok: true;
+    result: ResultSetHeader;
+    rows: TRow[];
     error: null;
 };
 
@@ -35,7 +42,9 @@ type DbMutateErr = {
     error: PublicDbError;
 };
 
-type DbMutateResult = DbMutateOk | DbMutateErr;
+type DbMutateResult = DbMutateHeaderOk | DbMutateErr;
+
+type DbMutateResultWithRows<TRow> = DbMutateWithRowsOk<TRow> | DbMutateErr;
 
 const QUERY_MODE = {
     execute: 'execute',
@@ -56,6 +65,33 @@ type QueryOptions = {
     shouldThrow?: boolean;
 };
 
+type ReadReturn<T, O extends QueryOptions | undefined> = O extends { shouldThrow: false }
+    ? DbReadResult<T>
+    : T[];
+
+function isResultSetHeader(value: unknown): value is ResultSetHeader {
+    return (
+        typeof value === "object" &&
+        value !== null &&
+        "affectedRows" in value &&
+        typeof (value as ResultSetHeader).affectedRows === "number"
+    );
+}
+
+function resultSetHeaderFromReturningRows(rows: RowDataPacket[]): ResultSetHeader {
+    const first = rows[0] as { id?: number } | undefined;
+
+    return {
+        fieldCount: 0,
+        affectedRows: rows.length,
+        insertId: Number(first?.id ?? 0),
+        info: "",
+        serverStatus: 0,
+        warningStatus: 0,
+        changedRows: 0,
+    } as ResultSetHeader;
+}
+
 class QueryEngine {
     private methods: ConnectionMethods;
 
@@ -66,39 +102,81 @@ class QueryEngine {
         };
     }
 
-    async read<T = RowDataPacket>(mode: QueryMode, sql: string, values?: ExecuteValues, options?: QueryOptions): Promise<DbReadResult<T>>  {
+    async read<T = RowDataPacket, O extends QueryOptions | undefined = undefined>(
+        mode: QueryMode,
+        sql: string,
+        values?: ExecuteValues,
+        options?: O,
+    ): Promise<ReadReturn<T, O>> {
         const parsedOptions = {
             retryCount: options?.retryCount ?? 0,
-            shouldThrow: options?.shouldThrow ?? false,
-        }
+            shouldThrow: options?.shouldThrow ?? true,
+        };
 
         try {
             const [rows] = await this.methods[mode]<RowDataPacket[]>(sql, values);
+            const typedRows = rows as T[];
 
-            return { ok: true, rows: rows as T[], error: null };
+            if (parsedOptions.shouldThrow) {
+                return typedRows as ReadReturn<T, O>;
+            }
+
+            return { ok: true, rows: typedRows, error: null } as ReadReturn<T, O>;
         } catch (error) {
             if (parsedOptions.retryCount > 0 && isRetryableDbError(error)) {
-                return this.read(mode, sql, values, { ...options, retryCount: parsedOptions.retryCount - 1 });
+                return this.read(mode, sql, values, {
+                    ...options,
+                    retryCount: parsedOptions.retryCount - 1,
+                } as O);
             }
 
             if (parsedOptions.shouldThrow) {
                 throw error;
             }
 
-            return { ok: false, rows: null, error: toPublicDbError(error) };
+            return { ok: false, rows: null, error: toPublicDbError(error) } as ReadReturn<T, O>;
         }
     }
 
-    async mutate(mode: QueryMode, sql: string, values?: ExecuteValues, options?: QueryOptions): Promise<DbMutateResult> {
+    async mutate(
+        mode: QueryMode,
+        sql: string,
+        values?: ExecuteValues,
+        options?: QueryOptions,
+    ): Promise<DbMutateResult>;
+    async mutate<TRow>(
+        mode: QueryMode,
+        sql: string,
+        values?: ExecuteValues,
+        options?: QueryOptions,
+    ): Promise<DbMutateResultWithRows<TRow>>;
+    async mutate<TRow>(
+        mode: QueryMode,
+        sql: string,
+        values?: ExecuteValues,
+        options?: QueryOptions,
+    ): Promise<DbMutateResult | DbMutateResultWithRows<TRow>> {
         const parsedOptions = {
             retryCount: options?.retryCount ?? 0,
             shouldThrow: options?.shouldThrow ?? false,
-        }
+        };
 
         try {
-            const [result] = await this.methods[mode]<ResultSetHeader>(sql, values);
+            const [first] = await this.methods[mode]<RowDataPacket[] | ResultSetHeader>(sql, values);
 
-            return { ok: true, result, error: null };
+            // INSERT … RETURNING (MariaDB): mysql2 gives a row array; plain INSERT gives ResultSetHeader.
+            if (Array.isArray(first)) {
+                const rows = first as TRow[];
+                const result = resultSetHeaderFromReturningRows(first);
+
+                return { ok: true, result, rows, error: null };
+            }
+
+            if (!isResultSetHeader(first)) {
+                throw new Error("Mutate returned an unexpected result shape.");
+            }
+
+            return { ok: true, result: first, error: null };
         } catch (error) {
             if (parsedOptions.retryCount > 0 && isRetryableDbError(error)) {
                 return this.mutate(mode, sql, values, { ...options, retryCount: parsedOptions.retryCount - 1 });
@@ -107,7 +185,7 @@ class QueryEngine {
             if (parsedOptions.shouldThrow) {
                 throw error;
             }
-            
+
             return { ok: false, result: null, error: toPublicDbError(error) };
         }
     }
@@ -142,7 +220,10 @@ const transaction = async <T>(fn: (qe: QueryEngine) => Promise<T>): Promise<T> =
 export {
     QueryEngine,
     QUERY_MODE,
+    type DbMutateResult,
+    type DbMutateResultWithRows,
+    type DbReadResult,
     type QueryMode,
     query,
-    transaction
-}
+    transaction,
+};

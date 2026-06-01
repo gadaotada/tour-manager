@@ -69,6 +69,32 @@ void reporter.captureError(payload);
 - Check Tailwind IntelliSense canonical-class suggestions before adding an arbitrary value.
 - Reused off-scale values belong in `@theme` in `client/styles/app.css`, not repeated `[...]` literals.
 
+## API Wire Format And Naming (snake_case)
+
+- **JSON bodies, query params, paginated envelopes, shared Zod schemas, and DB row shapes use `snake_case` field names** — e.g. `is_active`, `created_at`, `page_size`, `sort_by`, `display_name`.
+- Do **not** add mappers whose only job is camelCase ↔ snake_case conversion. Repository rows should match shared DTO types directly (see `server/features/hotels/`).
+- **Pagination** (shared + server): `page`, `page_size`, `sort_by`, `sort_dir`; response adds `last_page`, `total`, `data`, `query`.
+- **List query builders**: use `createSortedListQuerySchema` (plain) or `createTranslatedSortedListQuerySchema` (i18n message keys under a `messagePrefix`) from `shared/schemas/common.ts` — do not reimplement page/sort fields per feature.
+- **Validation copy**: Zod rules in shared schemas use `schemaMessage` / `schemaInvalidType` / `schemaBoolean` from `shared/libs/validation`; user-facing strings live in `commonMessages` under keys like `hotels.validation.name.min` (both `en` and `bg`).
+- On `400` validation errors, the top-level `error.message` is generic (`errors.validation`); field messages in `error.details` are **message keys** — client forms should translate them with `t(key)`.
+- **Exceptions (not renamed to snake_case)**:
+  - HTTP headers stay conventional (`x-socket-id`, `app-lang`).
+  - Express session store field: `req.session.user_id` (typed in `server/types/express-session.d.ts`).
+  - Local TS variables / function params (e.g. `hotelId`) — snake_case is for wire/data shapes, not every identifier.
+
+Example shared DTO shape:
+
+```json
+{
+  "id": 1,
+  "name": "Grand Hotel",
+  "is_active": true,
+  "created_at": "2026-06-01T12:00:00.000Z",
+  "page_size": 25,
+  "sort_by": "created_at"
+}
+```
+
 ## API Client And Server Responses
 
 - Make HTTP calls through `api.json.*` or `api.text.*` from `@libs/api` — do not import `httpClient` directly.
@@ -102,9 +128,18 @@ void reporter.captureError(payload);
 - Request validation: declare Zod schemas via `.schemas()`; handlers read `ctx.parsed.body` / `ctx.parsed.params` / `ctx.parsed.query`. Runtime parsing uses `@core/validation` (`validateRequest`).
 - Responses: use `ctx.reply.success({ data })`, `ctx.reply.created({ data })`, `ctx.reply.noContent()`, or throw `AppError` / domain errors for `errorMiddleware`. Do not `return` raw Express `res` objects from handlers (context merge footgun).
 - Auth: use `requireAuth` / `requirePermission` from `@features/auth` as `.with(requireAuth)` and per-route `.use(requirePermission(...))`. They return `{ user }` into context — read `ctx.user`, not `res.locals.currentUser`.
-- Realtime origin: `ctx.originSocketId` from the `x-socket-id` header (when the client connected over WS). Pass to services for `excludeSocketId` on broadcasts.
+- **Route paths**: prefer **action segments** that grep well (`/create`, `/update`, `/list`, `/delete/:id`) over bare REST roots (`POST /`, `PUT /`). Example: `hotelsController` → `/api/hotels/list`, `/api/hotels/create`, `/api/hotels/update`, `/api/hotels/update-status/:id`, `/api/hotels/delete/:id`.
+- Realtime origin: `ctx.origin_socket_id` from the `x-socket-id` header (when the client connected over WS). Pass to services as `exclude_socket_id` on broadcasts.
 - Express middleware (e.g. multer): adapt with `fromExpress(handler)` from `@core/controllers`.
-- Register in `server/app.ts` via `registerControllers(app, [controllers], { apiPrefix: "/api" })`. Wrong verb on a known path → `405` + `Allow` (built into registrar).
+- Register in `server/app.ts` via `registerControllers(app, [controllers], { apiPrefix: "/api" })`. Controllers registered today: `authController`, `healthController`, `hotelsController`. Wrong verb on a known path → `405` + `Allow` (built into registrar).
+
+## Feature Layers (hotels reference)
+
+- **Controller**: HTTP + Zod + auth/RBAC + calls service; no SQL.
+- **Service**: orchestration, pagination envelope, realtime emit — no SQL string building.
+- **Repository**: SQL composition, filters, optimistic updates (`mutateWithVersion`), returns shared row/DTO types directly.
+- **Shared**: Zod schemas (`shared/schemas/`), inferred types (`shared/types/`), realtime event constants (object enum style, e.g. `HOTEL_REALTIME_EVENTS.CREATE`).
+- **SQL DDL**: `server/core/sql/<feature>.sql` — apply manually to the dev DB when adding a table (no migration runner yet).
 
 ## Request Context (`res.locals.context`)
 
@@ -124,9 +159,10 @@ void reporter.captureError(payload);
 ## i18n (common / server / client)
 
 - **Shared** (`@tour-manager/shared` / `shared/libs/i18n`): locale machinery (`Locale`, `normalizeLocale`, …), `commonMessages` (shared keys both sides may use — spread into each catalog), generic `translate(messages, locale, key)` and `createTranslator`.
+- **`commonMessages` includes validation keys** for shared Zod schemas (e.g. `hotels.validation.*`, `hotels.validation.list.page_size.min`). Add keys in both `en` and `bg` when extending schemas.
 - **Server** (`@libs/i18n`): `errors.*` message keys only; composed `messages = { ...commonMessages, ...serverMessages }`. Use `translate`, `MessageKey`, `resolveLocale(req)` for HTTP/i18n. Do not put UI copy in server catalogs.
-- **Client** (`client/libs/i18n`): UI keys (`login.*`, `dashboard.*`, `pages.*`, …); composed with `commonMessages`. Use `t()` / `useT()` for components; import `MessageKey` from `@libs/i18n` when typing nav/routes.
-- Locale preference is client-only for now (`client/libs/i18n/locale-store.ts`), separate from server `UserSettings`.
+- **Client** (`client/libs/i18n`): UI keys (`login.*`, `dashboard.*`, `pages.*`, …); composed with `commonMessages`. Use `t()` / `useT()` for components; import `MessageKey` from `@libs/i18n` when typing nav/routes. Client `MessageKey` includes `commonMessages` keys — use `t(issue.message)` for Zod/API field errors when keys match.
+- Locale preference is client-only for now (`client/libs/i18n/locale-store.ts`), separate from server `UserSettings` (`language`, `notifications_enabled`, `table_settings`, … — all snake_case in JSON).
 - Keep the `app-lang` request header in sync via the axios interceptor / `bootstrapLocaleHeaderSync()`.
 - Remount the route tree on locale change (`<Outlet key={locale} />` in `__root.tsx`) until page subtrees subscribe to locale reactively.
 - RBAC helpers (`hasPermission`, `ROLE_PERMISSIONS`, etc.) live in `@tour-manager/shared` for future client route/button gating — do not move server-only.
@@ -147,14 +183,15 @@ void reporter.captureError(payload);
 
 ### HTTP ↔ realtime linking
 
-- After connect, the server emits `{ type: "realtime.connected", socketId, userId, scopes }` (validated with `realtimeConnectedMessageSchema` before send).
-- The client stores `socketId` and the axios interceptor in `httpClient` attaches `HTTP_HEADERS.SOCKET_ID` (`x-socket-id`) on subsequent API requests when available.
-- Controllers receive `ctx.originSocketId` when the client sent the header — use this to exclude the originating socket from broadcast events.
+- After connect, the server emits `{ type: "realtime.connected", user_id, socket_id, scopes }` (validated with `realtimeConnectedMessageSchema` before send).
+- The client stores `socket_id` and the axios interceptor in `httpClient` attaches `HTTP_HEADERS.SOCKET_ID` (`x-socket-id`) on subsequent API requests when available.
+- Controllers receive `ctx.origin_socket_id` when the client sent the header — use this to exclude the originating socket from broadcast events.
 
 ### Scopes and events
 
-- Only `"global"` scope exists for now. Add feature scopes (e.g. `"contracts:list"`) in `shared/libs/realtime/schemas.ts` when building that feature.
-- Server push: `wsGateway.emitToScope(scope, event, { excludeSocketId })` or `wsGateway.emitToUser(userId, event, { excludeSocketId })`.
+- Scopes today: `"global"`, `"hotels"` (see `REALTIME_SCOPES` in `shared/libs/realtime/schemas.ts`). Client joins feature scopes via `presence.join` when a page needs them.
+- Server push: `wsGateway.emitToScope(scope, event, { exclude_socket_id })` or `wsGateway.emitToUser(userId, event, { exclude_socket_id })`.
+- Feature events: define object-enum constants in shared (e.g. `HOTEL_REALTIME_EVENTS`) and typed payloads (`HotelRealtimePayload`) — use the same symbols on server emit and client subscribe.
 - Client subscribe: `subscribeRealtimeEvent(eventType, listener)` — add a route-scope hook when the first feature page needs `presence.join` / `presence.leave`.
 
 ### Dev proxy

@@ -102,7 +102,7 @@ type PermissionOverride = {
 };
 
 type UserPermissionOverride = PermissionOverride & {
-  userId: string;
+  user_id: string;
 };
 
 const ALL_PERMISSIONS = Object.freeze(

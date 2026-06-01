@@ -48,17 +48,40 @@ export {
 } from "./libs/realtime";
 
 export {
+    SORT_DIRS,
+    createSortedListQuerySchema,
+    createTranslatedSortedListQuerySchema,
+    idParamsSchema,
     idSchema,
-    versionSchema,
     paginationQuerySchema,
+    searchQuerySchema,
+    sortDirSchema,
+    versionSchema,
+    versionedBodySchema,
+    type IdParams,
     type PaginationQuery,
+    type SortDir,
+    type VersionedBody,
 } from "./schemas/common";
+
+export {
+    HOTEL_SORT_BY_COLS,
+    createHotelSchema,
+    hotelCoreSchema,
+    hotelIdParamsSchema,
+    hotelRecordSchema,
+    listHotelsQuerySchema,
+    updateHotelSchema,
+    updateHotelStatusSchema,
+} from "./schemas/hotels";
 
 export {
     type ApiFailure,
     type ApiResponse,
     type ApiSuccess,
 } from "./types/api";
+
+export { type PaginatedResult } from "./types/pagination";
 
 export {
     loginSchema,
@@ -96,8 +119,18 @@ export {
 } from "./types/users";
 
 export {
-    createHotelSchema,
-    listHotelsQuerySchema,
-    type CreateHotel,
+    HOTEL_REALTIME_EVENTS,
+    type ChangeHotelStatusInput,
+    type CreateHotelInput,
+    type Hotel,
+    type HotelCore,
+    type HotelIdParams,
+    type HotelRealtimeEvent,
+    type HotelRealtimePayload,
+    type HotelRecord,
+    type HotelsListQuery,
+    type HotelsListResult,
     type ListHotelsQuery,
-} from "./schemas/hotels";
+    type UpdateHotelInput,
+    type UpdateHotelStatusInput,
+} from "./types/hotels";

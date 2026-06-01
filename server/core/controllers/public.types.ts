@@ -45,7 +45,7 @@ type BaseContext = {
     proceed: () => ProceedSignal;
     logger: Logger;
     requestId: string;
-    originSocketId?: string;
+    origin_socket_id?: string;
 };
 
 type HandlerContext<Extra = object, Schemas = undefined> = BaseContext &

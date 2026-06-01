@@ -13,7 +13,7 @@ const authController = createAppController("/auth")
             const user = await authService.login(ctx.parsed.body);
 
             await regenerateSession(ctx.req);
-            ctx.req.session.userId = user.id;
+            ctx.req.session.user_id = user.id;
             await saveSession(ctx.req);
 
             ctx.reply.success({ data: { user } });
@@ -28,11 +28,11 @@ const authController = createAppController("/auth")
         
     .GET("/me")
         .handle(async (ctx) => {
-            const userId = ctx.req.session.userId;
+            const user_id = ctx.req.session.user_id;
 
-            if (!userId) throw unauthenticatedError();
+            if (!user_id) throw unauthenticatedError();
 
-            const user = await authService.getCurrentUser(userId);
+            const user = await authService.getCurrentUser(user_id);
 
             if (!user) {
                 await destroySession(ctx.req);

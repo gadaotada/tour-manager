@@ -31,7 +31,7 @@ type RealtimeGatewayOptions = {
 
 type SocketMeta = {
   isAlive: boolean;
-  socketId: string;
+  socket_id: string;
   user: ClientUser;
 };
 
@@ -47,7 +47,7 @@ class RealtimeGateway {
   private readonly socketsByScope = new Map<RealtimeScope, Set<WebSocket>>();
   private wss: WebSocketServer | null = null;
 
-  emitToScope(scope: RealtimeScope, event: unknown, options?: { excludeSocketId: string | undefined }): void {
+  emitToScope(scope: RealtimeScope, event: unknown, options?: { exclude_socket_id: string | undefined }): void {
     const parsedScope = realtimeScopeSchema.safeParse(scope);
     if (!parsedScope.success) {
       return;
@@ -59,9 +59,9 @@ class RealtimeGateway {
     }
 
     for (const socket of sockets) {
-      if (options?.excludeSocketId && options.excludeSocketId !== undefined) {
+      if (options?.exclude_socket_id && options.exclude_socket_id !== undefined) {
         const meta = this.metaBySocket.get(socket);
-        if (meta?.socketId === options.excludeSocketId) {
+        if (meta?.socket_id === options.exclude_socket_id) {
           continue;
         }
       }
@@ -70,13 +70,13 @@ class RealtimeGateway {
     }
   }
 
-  emitToUser(userId: string, event: unknown, options?: { excludeSocketId?: string }): void {
+  emitToUser(userId: string, event: unknown, options?: { exclude_socket_id?: string }): void {
     for (const [socket, meta] of this.metaBySocket) {
       if (meta.user.id !== userId) {
         continue;
       }
 
-      if (options?.excludeSocketId && meta.socketId === options.excludeSocketId) {
+      if (options?.exclude_socket_id && meta.socket_id === options.exclude_socket_id) {
         continue;
       }
 
@@ -106,13 +106,13 @@ class RealtimeGateway {
         return;
       }
 
-      const socketId = randomUUID();
-      this.metaBySocket.set(socket, { socketId, user, isAlive: true });
+      const socket_id = randomUUID();
+      this.metaBySocket.set(socket, { socket_id, user, isAlive: true });
       this.joinScope(socket, GLOBAL_SCOPE);
       const connectedMessage = realtimeConnectedMessageSchema.parse({
         type: "realtime.connected",
-        userId: user.id,
-        socketId,
+        user_id: user.id,
+        socket_id,
         scopes: [GLOBAL_SCOPE],
       });
       this.sendJson(socket, connectedMessage);
@@ -159,15 +159,15 @@ class RealtimeGateway {
         }
 
         const sessionRequest = req as SessionRequest;
-        const userId = sessionRequest.session?.userId;
+        const user_id = sessionRequest.session?.user_id;
 
-        if (!userId || !this.resolveUser) {
+        if (!user_id || !this.resolveUser) {
           socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
           socket.destroy();
           return;
         }
 
-        this.resolveUser(userId)
+        this.resolveUser(user_id)
           .then((user) => {
             if (!user) {
               socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");

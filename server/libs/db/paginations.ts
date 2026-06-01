@@ -1,7 +1,7 @@
 type PaginatedResult<TData, TQuery = unknown> = {
     page: number;
-    lastPage: number;
-    pageSize: number;
+    last_page: number;
+    page_size: number;
     total: number;
     data: TData;
     query: TQuery;
@@ -22,35 +22,39 @@ const clampInt = (value: number, min: number, max: number): number => {
 };
 
 const normalizePagination = (
-    pagination: { page: number; pageSize: number },
-): { page: number; pageSize: number; offset: number } => {
+    pagination: { page: number; page_size: number },
+): { page: number; page_size: number; offset: number } => {
     const page = clampInt(pagination.page, PAGINATION_LIMITS.minPage, PAGINATION_LIMITS.maxPage);
-    const pageSize = clampInt(pagination.pageSize, PAGINATION_LIMITS.minPageSize, PAGINATION_LIMITS.maxPageSize);
+    const page_size = clampInt(
+        pagination.page_size,
+        PAGINATION_LIMITS.minPageSize,
+        PAGINATION_LIMITS.maxPageSize,
+    );
 
     return {
         page,
-        pageSize,
-        offset: (page - 1) * pageSize,
+        page_size,
+        offset: (page - 1) * page_size,
     };
 };
 
 const buildPaginatedResult = <TData, TQuery>(
     payload: {
         page: number;
-        pageSize: number;
+        page_size: number;
         total: number;
         data: TData;
         query: TQuery;
     },
 ): PaginatedResult<TData, TQuery> => {
     const safeTotal = Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, payload.total));
-    const rawLastPage = Math.max(1, Math.ceil(safeTotal / payload.pageSize));
-    const lastPage = clampInt(rawLastPage, PAGINATION_LIMITS.minPage, PAGINATION_LIMITS.maxPage);
+    const rawLastPage = Math.max(1, Math.ceil(safeTotal / payload.page_size));
+    const last_page = clampInt(rawLastPage, PAGINATION_LIMITS.minPage, PAGINATION_LIMITS.maxPage);
 
     return {
         page: payload.page,
-        lastPage,
-        pageSize: payload.pageSize,
+        last_page,
+        page_size: payload.page_size,
         total: safeTotal,
         data: payload.data,
         query: payload.query,

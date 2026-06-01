@@ -17,7 +17,7 @@ const RESERVED_CONTEXT_KEYS = new Set([
     "proceed",
     "logger",
     "requestId",
-    "originSocketId",
+    "origin_socket_id",
     "parsed",
 ]);
 
@@ -27,7 +27,7 @@ const PROCEED_SIGNAL: ProceedSignal = {
 
 function createBaseContext(req: Parameters<RequestHandler>[0], res: Response): MutableBaseContext {
     const { logger, requestId } = getRequestContext(res);
-    const originSocketId = req.header(HTTP_HEADERS.SOCKET_ID);
+    const origin_socket_id = req.header(HTTP_HEADERS.SOCKET_ID);
 
     return {
         req,
@@ -36,7 +36,7 @@ function createBaseContext(req: Parameters<RequestHandler>[0], res: Response): M
         proceed: () => PROCEED_SIGNAL,
         logger,
         requestId,
-        ...(originSocketId ? { originSocketId } : {}),
+        ...(origin_socket_id ? { origin_socket_id } : {}),
     };
 }
 

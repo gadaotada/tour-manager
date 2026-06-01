@@ -33,9 +33,9 @@ const useAuthStore = create<AuthState>((set) => ({
           settings: normalizeUserSettings({
             ...state.user.settings,
             ...settings,
-            tableSettings: {
-              ...state.user.settings.tableSettings,
-              ...settings.tableSettings,
+            table_settings: {
+              ...state.user.settings.table_settings,
+              ...settings.table_settings,
             },
           }),
         },

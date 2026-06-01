@@ -51,7 +51,7 @@ function AppPageLayout({ children, className = "" }: AppPageLayoutProps) {
           <AppSidebar
             isExpanded={isDesktopSidebarExpanded}
             onLogout={handleLogout}
-            userName={user?.displayName}
+            userName={user?.display_name}
             variant="desktop"
           />
 
@@ -59,7 +59,7 @@ function AppPageLayout({ children, className = "" }: AppPageLayoutProps) {
             isOpen={isMobileSidebarOpen}
             onClose={handleCloseMobileSidebar}
             onLogout={handleLogout}
-            userName={user?.displayName}
+            userName={user?.display_name}
             variant="mobile"
           />
         </Fragment>

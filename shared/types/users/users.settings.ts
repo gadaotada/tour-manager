@@ -1,12 +1,12 @@
 import { SUPPORTED_LOCALES } from "../../libs/i18n";
 
 const UI_TABLE_NAMES = {
-  HOTELS: "HOTELS",
-  CONTRACTS: "CONTRACTS",
-  TEMPLATES: "TEMPLATES",
-  PAYMENTS: "PAYMENTS",
-  LOGS: "LOGS",
-  USERS: "USERS",
+    HOTELS: "HOTELS",
+    CONTRACTS: "CONTRACTS",
+    TEMPLATES: "TEMPLATES",
+    PAYMENTS: "PAYMENTS",
+    LOGS: "LOGS",
+    USERS: "USERS",
 } as const;
 
 const TABLE_PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
@@ -18,133 +18,131 @@ type TablePageSize = (typeof TABLE_PAGE_SIZE_OPTIONS)[number];
 type UserLanguage = (typeof SUPPORTED_LOCALES)[number];
 
 type TableSettings = {
-  pageSize: TablePageSize;
-  hiddenColumns: string[];
+    page_size: TablePageSize;
+    hidden_columns: string[];
 };
 
 type UserSettings = {
-  notificationsEnabled: boolean;
-  language: UserLanguage;
-  tableSettings: Record<UITableName, TableSettings>;
+    notifications_enabled: boolean;
+    language: UserLanguage;
+    table_settings: Record<UITableName, TableSettings>;
 };
 
 const DEFAULT_USER_SETTINGS = {
-  notificationsEnabled: true,
-  language: "en",
-  tableSettings: {
-    [UI_TABLE_NAMES.HOTELS]: {
-      pageSize: DEFAULT_TABLE_PAGE_SIZE,
-      hiddenColumns: [],
+    notifications_enabled: true,
+    language: "en",
+    table_settings: {
+        [UI_TABLE_NAMES.HOTELS]: {
+            page_size: DEFAULT_TABLE_PAGE_SIZE,
+            hidden_columns: [],
+        },
+        [UI_TABLE_NAMES.CONTRACTS]: {
+            page_size: DEFAULT_TABLE_PAGE_SIZE,
+            hidden_columns: [],
+        },
+        [UI_TABLE_NAMES.TEMPLATES]: {
+            page_size: DEFAULT_TABLE_PAGE_SIZE,
+            hidden_columns: [],
+        },
+        [UI_TABLE_NAMES.PAYMENTS]: {
+            page_size: DEFAULT_TABLE_PAGE_SIZE,
+            hidden_columns: [],
+        },
+        [UI_TABLE_NAMES.LOGS]: {
+            page_size: DEFAULT_TABLE_PAGE_SIZE,
+            hidden_columns: [],
+        },
+        [UI_TABLE_NAMES.USERS]: {
+            page_size: DEFAULT_TABLE_PAGE_SIZE,
+            hidden_columns: [],
+        },
     },
-    [UI_TABLE_NAMES.CONTRACTS]: {
-      pageSize: DEFAULT_TABLE_PAGE_SIZE,
-      hiddenColumns: [],
-    },
-    [UI_TABLE_NAMES.TEMPLATES]: {
-      pageSize: DEFAULT_TABLE_PAGE_SIZE,
-      hiddenColumns: [],
-    },
-    [UI_TABLE_NAMES.PAYMENTS]: {
-      pageSize: DEFAULT_TABLE_PAGE_SIZE,
-      hiddenColumns: [],
-    },
-    [UI_TABLE_NAMES.LOGS]: {
-      pageSize: DEFAULT_TABLE_PAGE_SIZE,
-      hiddenColumns: [],
-    },
-    [UI_TABLE_NAMES.USERS]: {
-      pageSize: DEFAULT_TABLE_PAGE_SIZE,
-      hiddenColumns: [],
-    },
-  },
 } satisfies UserSettings;
 
 function isTablePageSize(value: number): value is TablePageSize {
-  return TABLE_PAGE_SIZE_OPTIONS.includes(value as TablePageSize);
+    return TABLE_PAGE_SIZE_OPTIONS.includes(value as TablePageSize);
 }
 
 function cloneDefaultUserSettings(): UserSettings {
-  return {
-    ...DEFAULT_USER_SETTINGS,
-    tableSettings: Object.fromEntries(
-      Object.entries(DEFAULT_USER_SETTINGS.tableSettings).map(
-        ([tableName, settings]) => [
-          tableName,
-          {
-            ...settings,
-            hiddenColumns: [...settings.hiddenColumns],
-          },
-        ],
-      ),
-    ) as unknown as UserSettings["tableSettings"],
-  };
+    return {
+        ...DEFAULT_USER_SETTINGS,
+        table_settings: Object.fromEntries(
+            Object.entries(DEFAULT_USER_SETTINGS.table_settings).map(([tableName, settings]) => [
+                tableName,
+                {
+                    ...settings,
+                    hidden_columns: [...settings.hidden_columns],
+                },
+            ]),
+        ) as unknown as UserSettings["table_settings"],
+    };
 }
 
 function normalizeUserSettings(
-  settings: Partial<UserSettings> | null | undefined,
+    settings: Partial<UserSettings> | null | undefined,
 ): UserSettings {
-  const defaults = cloneDefaultUserSettings();
+    const defaults = cloneDefaultUserSettings();
 
-  if (!settings) {
-    return defaults;
-  }
+    if (!settings) {
+        return defaults;
+    }
 
-  return {
-    notificationsEnabled:
-      typeof settings.notificationsEnabled === "boolean"
-        ? settings.notificationsEnabled
-        : defaults.notificationsEnabled,
-    language:
-      typeof settings.language === "string" &&
-      SUPPORTED_LOCALES.includes(settings.language)
-        ? settings.language
-        : defaults.language,
-    tableSettings: normalizeTableSettings(settings.tableSettings),
-  };
+    return {
+        notifications_enabled:
+            typeof settings.notifications_enabled === "boolean"
+                ? settings.notifications_enabled
+                : defaults.notifications_enabled,
+        language:
+            typeof settings.language === "string" &&
+            SUPPORTED_LOCALES.includes(settings.language)
+                ? settings.language
+                : defaults.language,
+        table_settings: normalizeTableSettings(settings.table_settings),
+    };
 }
 
 function normalizeTableSettings(
-  tableSettings: Partial<UserSettings>["tableSettings"],
-): UserSettings["tableSettings"] {
-  const normalized = cloneDefaultUserSettings().tableSettings;
+    table_settings: Partial<UserSettings>["table_settings"],
+): UserSettings["table_settings"] {
+    const normalized = cloneDefaultUserSettings().table_settings;
 
-  if (!tableSettings || typeof tableSettings !== "object") {
-    return normalized;
-  }
-
-  for (const tableName of Object.values(UI_TABLE_NAMES)) {
-    const settings = tableSettings[tableName];
-
-    if (!settings) {
-      continue;
+    if (!table_settings || typeof table_settings !== "object") {
+        return normalized;
     }
 
-    normalized[tableName] = {
-      pageSize: isTablePageSize(settings.pageSize)
-        ? settings.pageSize
-        : normalized[tableName].pageSize,
-      hiddenColumns: Array.isArray(settings.hiddenColumns)
-        ? settings.hiddenColumns.filter(
-            (column): column is string => typeof column === "string",
-          )
-        : normalized[tableName].hiddenColumns,
-    };
-  }
+    for (const tableName of Object.values(UI_TABLE_NAMES)) {
+        const settings = table_settings[tableName];
 
-  return normalized;
+        if (!settings) {
+            continue;
+        }
+
+        normalized[tableName] = {
+            page_size: isTablePageSize(settings.page_size)
+                ? settings.page_size
+                : normalized[tableName].page_size,
+            hidden_columns: Array.isArray(settings.hidden_columns)
+                ? settings.hidden_columns.filter(
+                      (column): column is string => typeof column === "string",
+                  )
+                : normalized[tableName].hidden_columns,
+        };
+    }
+
+    return normalized;
 }
 
 export {
-  DEFAULT_TABLE_PAGE_SIZE,
-  DEFAULT_USER_SETTINGS,
-  TABLE_PAGE_SIZE_OPTIONS,
-  UI_TABLE_NAMES,
-  cloneDefaultUserSettings,
-  isTablePageSize,
-  normalizeUserSettings,
-  type TablePageSize,
-  type TableSettings,
-  type UITableName,
-  type UserLanguage,
-  type UserSettings,
+    DEFAULT_TABLE_PAGE_SIZE,
+    DEFAULT_USER_SETTINGS,
+    TABLE_PAGE_SIZE_OPTIONS,
+    UI_TABLE_NAMES,
+    cloneDefaultUserSettings,
+    isTablePageSize,
+    normalizeUserSettings,
+    type TablePageSize,
+    type TableSettings,
+    type UITableName,
+    type UserLanguage,
+    type UserSettings,
 };

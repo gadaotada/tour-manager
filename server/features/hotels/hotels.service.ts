@@ -1,37 +1,81 @@
-import { CreateHotel, REALTIME_SCOPES, type ListHotelsQuery } from "@tour-manager/shared";
-import { hotelsRepository } from "./hotels.repository";
 import { wsGateway } from "@core/realtime";
+import { buildPaginatedResult, DB_ERROR_CODES, DB_ERROR_MESSAGE_KEYS, DbError } from "@libs/db";
+import {
+    HOTEL_REALTIME_EVENTS,
+    type ChangeHotelStatusInput,
+    type CreateHotelInput,
+    type Hotel,
+    type HotelRealtimePayload,
+    type ListHotelsQuery,
+    type UpdateHotelInput,
+} from "@tour-manager/shared";
 
+import { hotelsRepository } from "./hotels.repository";
+
+function emitHotelEvent(
+    event: HotelRealtimePayload["event"],
+    data: number,
+    exclude_socket_id: string | undefined,
+) {
+    const payload: HotelRealtimePayload = { event, data };
+    wsGateway.emitToScope("hotels", payload, { exclude_socket_id });
+}
 
 const hotelsService = {
-    createHotel: async (params: CreateHotel, originSocketId?: string) => {
-        const hotel = await hotelsRepository.createHotel(params);
+    getHotels: async (payload: ListHotelsQuery) => {
+        const { rows, total } = await hotelsRepository.listHotels(payload);
 
-        wsGateway.emitToScope("global", {
-            type: "hotel.created",
-            occurredAt: new Date().toISOString(),
-            data: hotel,
-        }, { excludeSocketId: originSocketId });
-
-        return hotel;
+        return buildPaginatedResult({
+            page: payload.page,
+            page_size: payload.page_size,
+            total,
+            data: rows,
+            query: {
+                search: payload.search,
+                stars: payload.stars,
+                is_active: payload.is_active,
+                sort_by: payload.sort_by,
+                sort_dir: payload.sort_dir,
+            },
+        });
     },
-    getHotels: async (params: ListHotelsQuery) => {
-        const hotels = await hotelsRepository.listHotels(params);
-        return hotels;
+
+    createHotel: async (payload: CreateHotelInput, exclude_socket_id: string | undefined): Promise<Hotel> => {
+        const mutation = await hotelsRepository.createHotel(payload);
+
+        if (!mutation.ok) throw new DbError(mutation.error);
+
+        const createdRow = mutation.rows?.[0];
+
+        if (!createdRow) {
+            throw new DbError({
+                statusCode: 500,
+                code: DB_ERROR_CODES.GENERAL_DB_ERROR,
+                messageKey: DB_ERROR_MESSAGE_KEYS.GENERAL_DB_ERROR,
+                safeMessage: "Database operation failed.",
+                cause: null,
+            });
+        }
+
+        emitHotelEvent(HOTEL_REALTIME_EVENTS.CREATE, createdRow.id, exclude_socket_id);
+
+        return createdRow;
     },
 
-    updateHotel: async (id: number, params: Partial<CreateHotel>, originSocketId?: string) => {
-        const hotel = await hotelsRepository.updateHotel(id, params);
-        // TODO: Handle errors - dublicates, 404, etc.
-
-        wsGateway.emitToScope("global", {
-            type: "hotel.updated",
-            occurredAt: new Date().toISOString(),
-            data: hotel,
-        }, { excludeSocketId: originSocketId });
-
-        return hotel;
+    updateHotel: async (payload: UpdateHotelInput, exclude_socket_id: string | undefined) => {
+        await hotelsRepository.updateHotel(payload);
+        emitHotelEvent(HOTEL_REALTIME_EVENTS.UPDATE, payload.id, exclude_socket_id);
     },
-}
+
+    changeHotelStatus: async (payload: ChangeHotelStatusInput, exclude_socket_id: string | undefined) => {
+        await hotelsRepository.updateHotel(payload);
+        emitHotelEvent(HOTEL_REALTIME_EVENTS.STATUS_CHANGE, payload.id, exclude_socket_id);
+    },
+
+    deleteHotel: async (hotelId: number, exclude_socket_id: string | undefined) => {
+        await hotelsRepository.deleteHotel(hotelId);
+        emitHotelEvent(HOTEL_REALTIME_EVENTS.DELETE, hotelId, exclude_socket_id);
+    },
+};
 
 export { hotelsService };
