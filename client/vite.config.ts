@@ -15,7 +15,11 @@ export default defineConfig({
       generatedRouteTree: "./routeTree.gen.ts",
       autoCodeSplitting: true,
     }),
-    react(),
+    react({
+      babel: {
+        plugins: ["babel-plugin-react-compiler"],
+      },
+    }),
     tailwindcss(),
   ],
   resolve: {

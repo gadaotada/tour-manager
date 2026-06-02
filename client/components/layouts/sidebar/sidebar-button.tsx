@@ -1,6 +1,6 @@
 import type { MessageKey } from "@libs/i18n";
 import type { LucideIcon } from "lucide-react";
-import { Link, useMatchRoute } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 
 import { Button } from "@components/ui/button";
 import {
@@ -32,8 +32,8 @@ function SidebarButton({
   to,
   variant = "ghost",
 }: SidebarButtonProps) {
-  const matchRoute = useMatchRoute();
-  const isActive = to ? Boolean(matchRoute({ to })) : false;
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isActive = to ? pathname === to || pathname.startsWith(`${to}/`) : false;
   const isIconOnly = isExpanded && !showLabel;
   const label = t(labelKey);
   const buttonClassName = cn(

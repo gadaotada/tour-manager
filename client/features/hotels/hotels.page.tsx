@@ -10,7 +10,12 @@ import { useT } from "@libs/i18n";
 
 import { HotelFormDialog } from "./hotel-form-dialog";
 import { HotelsPagination } from "./hotels-pagination";
-import { hotelsQueryToFilters, normalizeHotelsSearch, type HotelsListFilters } from "./hotels.query";
+import {
+    DEFAULT_HOTELS_LIST_FILTERS,
+    hotelsQueryToFilters,
+    normalizeHotelsSearch,
+    type HotelsListFilters,
+} from "./hotels.query";
 import { HOTEL_TABLE_VISIBILITY_COLUMNS, HotelsTable } from "./hotels-table";
 import { HotelsToolbar } from "./hotels-toolbar";
 import { useHotelsRealtime } from "./use-hotels-realtime";
@@ -27,6 +32,7 @@ function HotelsPage() {
     const user = useAuthUser();
     const filters = hotelsQueryToFilters(query);
     const tableSettings = useTableSettings(UI_TABLE_NAMES.HOTELS);
+    const showInitialLoading = isLoading && !result;
     const [formMode, setFormMode] = useState<"create" | "edit">("create");
     const [formOpen, setFormOpen] = useState(false);
     const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
@@ -34,7 +40,7 @@ function HotelsPage() {
     const canCreate = user ? hasPermission(user.permissions, PERMISSIONS.HOTELS.CREATE_ANY) : false;
 
     useHotelsRealtime(() => {
-        router.invalidate();
+        refreshHotels();
     });
 
     function openCreateDialog() {
@@ -50,12 +56,14 @@ function HotelsPage() {
     }
 
     function handleMutationSuccess() {
-        router.invalidate();
+        refreshHotels();
     }
 
     function updateSearch(next: Partial<typeof query>) {
         navigate({
             search: (current) => normalizeHotelsSearch({ ...current, ...next }),
+        }).catch((error: unknown) => {
+            console.error("Failed to update hotels search params:", error);
         });
     }
 
@@ -100,21 +108,39 @@ function HotelsPage() {
     }
 
     function resetFilters() {
+        const nextQuery = normalizeHotelsSearch({
+            page: 1,
+            page_size: query.page_size,
+            sort_by: query.sort_by,
+            sort_dir: query.sort_dir,
+        });
+
+        if (
+            filters.search === DEFAULT_HOTELS_LIST_FILTERS.search &&
+            filters.stars === DEFAULT_HOTELS_LIST_FILTERS.stars &&
+            filters.is_active === DEFAULT_HOTELS_LIST_FILTERS.is_active &&
+            query.page === nextQuery.page
+        ) {
+            return;
+        }
+
         navigate({
-            search: () =>
-                normalizeHotelsSearch({
-                    page: 1,
-                    page_size: query.page_size,
-                    sort_by: query.sort_by,
-                    sort_dir: query.sort_dir,
-                }),
+            search: () => nextQuery,
+        }).catch((error: unknown) => {
+            console.error("Failed to reset hotels filters:", error);
+        });
+    }
+
+    function refreshHotels() {
+        router.invalidate().catch((error: unknown) => {
+            console.error("Failed to refresh hotels:", error);
         });
     }
 
     return (
         <>
             <ListPageSection
-                loading={isLoading}
+                loading={showInitialLoading}
                 loadingMessage={t("hotels.list.loading")}
                 empty={Boolean(result && result.data.length === 0)}
                 emptyMessage={t("hotels.list.empty")}

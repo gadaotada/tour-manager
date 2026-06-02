@@ -32,13 +32,19 @@ function TableColumnVisibilityMenu<TColumnId extends string>({
     onHiddenColumnsChange,
 }: TableColumnVisibilityMenuProps<TColumnId>) {
     const t = useT();
-    const hiddenColumnSet = new Set(hiddenColumns);
+    const columnIdSet = new Set(columns.map((column) => column.id));
+    const hiddenColumnSet = new Set(
+        hiddenColumns.filter((hiddenColumn): hiddenColumn is TColumnId =>
+            columnIdSet.has(hiddenColumn as TColumnId),
+        ),
+    );
+    const effectiveHiddenColumns = Array.from(hiddenColumnSet);
     const visibleColumnCount = columns.filter((column) => !hiddenColumnSet.has(column.id)).length;
 
     async function toggleColumn(columnId: TColumnId, visible: boolean) {
         const nextHiddenColumns = visible
-            ? hiddenColumns.filter((hiddenColumn) => hiddenColumn !== columnId)
-            : [...hiddenColumns, columnId];
+            ? effectiveHiddenColumns.filter((hiddenColumn) => hiddenColumn !== columnId)
+            : [...effectiveHiddenColumns, columnId];
 
         try {
             await onHiddenColumnsChange(nextHiddenColumns);
@@ -62,7 +68,7 @@ function TableColumnVisibilityMenu<TColumnId extends string>({
                     )}
                     <span>{t("dashboard.workspace.customizeColumns")}</span>
                     <span className="grid size-5 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium leading-none text-primary-foreground tabular-nums">
-                        {hiddenColumns.length}
+                        {hiddenColumnSet.size}
                     </span>
                 </Button>
             </DropdownMenuTrigger>

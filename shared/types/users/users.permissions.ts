@@ -198,9 +198,11 @@ function resolvePermissions(
 }
 
 function hasPermission(
-  permissions: readonly Permission[],
+  permissions: readonly Permission[] | null | undefined,
   permission: Permission,
 ): boolean {
+
+  if (!permissions) return false;
   return permissions.includes(permission);
 }
 

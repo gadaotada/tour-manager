@@ -2,6 +2,8 @@ import type { Locale } from "./locales";
 
 const commonMessages = {
     en: {
+        "login.validation.username.required": "Enter your username.",
+        "login.validation.password.required": "Enter your password.",
         "hotels.validation.name.min": "Name must be at least 3 characters.",
         "hotels.validation.name.max": "Name must be at most 100 characters.",
         "hotels.validation.address.min": "Address must be at least 5 characters.",
@@ -30,6 +32,8 @@ const commonMessages = {
         "hotels.validation.list.sort_dir": "Sort direction must be ASC or DESC.",
     },
     bg: {
+        "login.validation.username.required": "Въведете потребителско име.",
+        "login.validation.password.required": "Въведете парола.",
         "hotels.validation.name.min": "Името трябва да е поне 3 символа.",
         "hotels.validation.name.max": "Името трябва да е най-много 100 символа.",
         "hotels.validation.address.min": "Адресът трябва да е поне 5 символа.",

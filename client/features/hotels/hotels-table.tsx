@@ -17,7 +17,6 @@ import {
   useConfirmAction,
   useRowActionMenu,
 } from "@components/data";
-import { Button } from "@components/ui/button";
 import { useAuthUser } from "@core/stores";
 import type { TableColumnVisibilityColumn } from "@features/settings";
 import { ApiClientError } from "@libs/api";
@@ -67,8 +66,10 @@ function HotelsTable({ hiddenColumns = [], onEdit, onRefresh, onSort }: HotelsTa
   const sort = useHotelsSort();
   const locale = useLocaleStore((state) => state.locale);
   const user = useAuthUser();
-  const canUpdate = user ? hasPermission(user.permissions, PERMISSIONS.HOTELS.UPDATE_ANY) : false;
-  const canDelete = user ? hasPermission(user.permissions, PERMISSIONS.HOTELS.DELETE_ANY) : false;
+
+  const canUpdate = hasPermission(user?.permissions, PERMISSIONS.HOTELS.UPDATE_ANY);
+  const canDelete = hasPermission(user?.permissions, PERMISSIONS.HOTELS.DELETE_ANY);
+  
   const hasRowActions = canUpdate || canDelete;
   const tableViewportRef = useRef<HTMLDivElement | null>(null);
   const rowActions = useRowActionMenu<Hotel>({ enabled: hasRowActions });
@@ -83,8 +84,7 @@ function HotelsTable({ hiddenColumns = [], onEdit, onRefresh, onSort }: HotelsTa
   });
 
   const [pendingHotelId, setPendingHotelId] = useState<number | null>(null);
-  const hiddenColumnSet = useMemo(() => new Set(hiddenColumns), [hiddenColumns]);
-
+  const hiddenColumnSet = new Set(hiddenColumns);
   const columns = useMemo(
     (): HotelColumn[] =>
       HOTEL_TABLE_COLUMN_IDS.filter((columnId) => !hiddenColumnSet.has(columnId)).map(

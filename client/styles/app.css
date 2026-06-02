@@ -87,7 +87,7 @@
   --border-strong: oklch(78% 0.026 255);
   --input: oklch(88% 0.018 255);
   --ring: oklch(54% 0.15 245);
-  --muted: oklch(48% 0.032 255);
+  --muted: oklch(94% 0.014 255);
   --muted-foreground: oklch(48% 0.032 255);
   --subtle: oklch(62% 0.026 255);
 
@@ -130,7 +130,7 @@
   --border-strong: oklch(41% 0.034 255);
   --input: oklch(31% 0.03 255);
   --ring: oklch(68% 0.14 245);
-  --muted: oklch(73% 0.024 255);
+  --muted: oklch(39% 0.034 255);
   --muted-foreground: oklch(73% 0.024 255);
   --subtle: oklch(58% 0.028 255);
 
