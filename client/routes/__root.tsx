@@ -1,5 +1,6 @@
 import { TooltipProvider } from "@components/ui/tooltip";
 import { useLocaleStore } from "@libs/i18n";
+import { Toaster } from "@libs/toasts";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createRootRoute({
@@ -12,6 +13,7 @@ function RootLayout() {
   return (
     <TooltipProvider>
       <Outlet key={locale} />
+      <Toaster />
     </TooltipProvider>
   );
 }

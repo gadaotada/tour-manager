@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
+
 import { Button } from "@components/ui/button";
-import { Input } from "@components/ui/input";
+import { SearchInput } from "@components/data";
 import { Label } from "@components/ui/label";
 import {
     Select,
@@ -10,11 +12,13 @@ import {
 } from "@components/ui/select";
 import { useT } from "@libs/i18n";
 
-import type { HotelsListFilters } from "./use-hotels-list";
+import { HotelStars } from "./hotel-stars";
+import type { HotelsListFilters } from "./hotels.query";
 
 type HotelsToolbarProps = {
     filters: HotelsListFilters;
     canCreate: boolean;
+    columnVisibility?: ReactNode;
     onSearchChange: (search: string) => void;
     onStarsChange: (stars: HotelsListFilters["stars"]) => void;
     onIsActiveChange: (is_active: HotelsListFilters["is_active"]) => void;
@@ -25,6 +29,7 @@ type HotelsToolbarProps = {
 function HotelsToolbar({
     filters,
     canCreate,
+    columnVisibility,
     onSearchChange,
     onStarsChange,
     onIsActiveChange,
@@ -38,11 +43,11 @@ function HotelsToolbar({
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="space-y-1.5 sm:col-span-2 xl:col-span-2">
                     <Label htmlFor="hotels-search">{t("hotels.filters.search")}</Label>
-                    <Input
+                    <SearchInput
                         id="hotels-search"
                         value={filters.search}
                         placeholder={t("hotels.filters.searchPlaceholder")}
-                        onChange={(event) => onSearchChange(event.target.value)}
+                        onSearchChange={onSearchChange}
                     />
                 </div>
 
@@ -56,7 +61,10 @@ function HotelsToolbar({
                             <SelectItem value="all">{t("hotels.filters.all")}</SelectItem>
                             {Array.from({ length: 7 }, (_, index) => (
                                 <SelectItem key={index} value={String(index)}>
-                                    {t("hotels.filters.starsOption").replace("{count}", String(index))}
+                                    <span className="flex items-center gap-2">
+                                        <HotelStars value={index} />
+                                        <span>{t("hotels.filters.starsOption").replace("{count}", String(index))}</span>
+                                    </span>
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -79,6 +87,7 @@ function HotelsToolbar({
             </div>
 
             <div className="flex flex-wrap gap-2">
+                {columnVisibility}
                 <Button type="button" variant="ghost" onClick={onReset}>
                     {t("hotels.filters.reset")}
                 </Button>

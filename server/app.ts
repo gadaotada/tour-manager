@@ -11,6 +11,7 @@ import { errorMiddleware, requestContextMiddleware } from "@core/http";
 import { authController } from "./features/auth";
 import { healthController } from "./features/health/health.controller";
 import { hotelsController } from "./features/hotels/hotels.controller";
+import { settingsUserController } from "./features/settings";
 import { env } from "@libs/config";
 import { logger } from "@libs/logger";
 import { sessionMiddleware } from "@libs/sessions";
@@ -33,6 +34,7 @@ export function createApp(): Express {
       authController,
       healthController,
       hotelsController,
+      settingsUserController,
     ],
     { apiPrefix: "/api" },
   );

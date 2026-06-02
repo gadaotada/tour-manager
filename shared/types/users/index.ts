@@ -27,9 +27,11 @@ export {
     cloneDefaultUserSettings,
     isTablePageSize,
     normalizeUserSettings,
+    updateUserSettingsSchema,
     type TablePageSize,
     type TableSettings,
     type UITableName,
+    type UpdateUserSettingsInput,
     type UserLanguage,
     type UserSettings,
 } from "./users.settings";

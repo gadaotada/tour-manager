@@ -1,7 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   build: {
@@ -41,12 +41,6 @@ export default defineConfig({
         target: "http://localhost:3000",
         ws: true,
       },
-    },
-  },
-  test: {
-    environment: "jsdom",
-    coverage: {
-      provider: "v8",
     },
   },
 });

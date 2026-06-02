@@ -13,7 +13,7 @@ function AppMain({ children, className }: AppMainProps) {
       <div className="h-full overflow-y-auto">
         <div
           className={cn(
-            "w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-8",
+            "w-full p-2",
             className,
           )}
         >

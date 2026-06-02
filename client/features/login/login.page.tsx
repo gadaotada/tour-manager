@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm, type FieldErrors, type Resolver, type ResolverResult } from "react-hook-form";
+import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import type { LoginInput } from "@tour-manager/shared";
 import { loginSchema } from "@tour-manager/shared";
@@ -15,23 +15,29 @@ import { login } from "./login.api";
 function LoginPage() {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const {
-    formState: { errors, isSubmitting },
-    handleSubmit,
-    register,
-  } = useForm<LoginInput>({
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const form = useForm({
     defaultValues: {
       password: "",
       username: "",
+    } satisfies LoginInput,
+    onSubmit: async ({ value }) => {
+      await submitLogin(value);
     },
-    resolver: loginFormResolver,
   });
 
   async function submitLogin(values: LoginInput) {
     setErrorMessage(null);
+    setValidationMessage(null);
+
+    const parsed = loginSchema.safeParse(values);
+    if (!parsed.success) {
+      setValidationMessage(t("login.validation.required"));
+      return;
+    }
 
     try {
-      await login(values);
+      await login(parsed.data);
       await navigate({ to: APP_PATHS.dashboard });
     } catch (error) {
       console.error("Login error:", error);
@@ -41,8 +47,6 @@ function LoginPage() {
     }
   }
 
-  const validationMessage =
-    errors.username?.message ?? errors.password?.message ?? null;
   const visibleErrorMessage = errorMessage ?? validationMessage;
 
   return (
@@ -62,7 +66,11 @@ function LoginPage() {
 
         <form
           className="rounded-lg border bg-card p-6 shadow-sm"
-          onSubmit={handleSubmit(submitLogin)}
+          onSubmit={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            form.handleSubmit();
+          }}
         >
           <div className="mb-6">
             <h2 className="text-xl font-semibold tracking-normal">
@@ -74,28 +82,50 @@ function LoginPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="username">{t("login.form.username")}</Label>
-              <Input
-                id="username"
-                autoComplete="username"
-                disabled={isSubmitting}
-                aria-invalid={Boolean(errors.username)}
-                {...register("username", { required: true })}
-              />
-            </div>
+            <form.Field name="username">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>{t("login.form.username")}</Label>
+                  <form.Subscribe selector={(state) => state.isSubmitting}>
+                    {(isSubmitting) => (
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        autoComplete="username"
+                        disabled={isSubmitting}
+                        value={field.state.value}
+                        aria-invalid={Boolean(validationMessage)}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                      />
+                    )}
+                  </form.Subscribe>
+                </div>
+              )}
+            </form.Field>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password">{t("login.form.password")}</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                disabled={isSubmitting}
-                aria-invalid={Boolean(errors.password)}
-                {...register("password", { required: true })}
-              />
-            </div>
+            <form.Field name="password">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>{t("login.form.password")}</Label>
+                  <form.Subscribe selector={(state) => state.isSubmitting}>
+                    {(isSubmitting) => (
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        type="password"
+                        autoComplete="current-password"
+                        disabled={isSubmitting}
+                        value={field.state.value}
+                        aria-invalid={Boolean(validationMessage)}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                      />
+                    )}
+                  </form.Subscribe>
+                </div>
+              )}
+            </form.Field>
           </div>
 
           {visibleErrorMessage ? (
@@ -104,38 +134,17 @@ function LoginPage() {
             </p>
           ) : null}
 
-          <Button className="mt-6 w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting ? t("login.form.submitting") : t("login.form.submit")}
-          </Button>
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button className="mt-6 w-full" disabled={isSubmitting} type="submit">
+                {isSubmitting ? t("login.form.submitting") : t("login.form.submit")}
+              </Button>
+            )}
+          </form.Subscribe>
         </form>
       </section>
     </main>
   );
 }
-
-const loginFormResolver: Resolver<LoginInput> = async (values) => {
-  const parsed = loginSchema.safeParse(values);
-
-  if (parsed.success) {
-    return { values: parsed.data, errors: {} };
-  }
-
-  const errors: FieldErrors<LoginInput> = {};
-
-  for (const issue of parsed.error.issues) {
-    const field = issue.path[0];
-    if (field !== "username" && field !== "password") continue;
-    if (errors[field]) continue;
-
-    errors[field] = {
-      message: t("login.validation.required"),
-      type: "validation",
-    };
-  }
-
-  // Keep the submitted shape — returning `values: {}` makes RHF call `unset` on
-  // null/undefined internals and throws "Cannot convert undefined or null to object".
-  return { values, errors } as ResolverResult<LoginInput>;
-};
 
 export { LoginPage };

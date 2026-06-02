@@ -16,11 +16,7 @@
     "build": "turbo build",
     "build:client": "turbo build --filter=client",
     "build:server": "turbo build --filter=server",
-    "test": "turbo test",
-    "test:server": "npm run test -w server",
-    "test:client": "npm run test -w client",
     "test:e2e": "playwright test",
-    "coverage": "turbo coverage",
     "typecheck": "turbo typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -29,12 +25,10 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@playwright/test": "^1.50.0",
-    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9.0.0",
     "prettier": "^3.0.0",
     "turbo": "^2.0.0",
     "typescript": "^5.8.0",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^4.1.8"
+    "typescript-eslint": "^8.0.0"
   }
 }

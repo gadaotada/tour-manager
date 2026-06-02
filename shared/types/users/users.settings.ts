@@ -1,4 +1,5 @@
 import { SUPPORTED_LOCALES } from "../../libs/i18n";
+import { z } from "zod";
 
 const UI_TABLE_NAMES = {
     HOTELS: "HOTELS",
@@ -27,6 +28,35 @@ type UserSettings = {
     language: UserLanguage;
     table_settings: Record<UITableName, TableSettings>;
 };
+
+const tablePageSizeSchema = z.union([
+    z.literal(10),
+    z.literal(25),
+    z.literal(50),
+    z.literal(100),
+]);
+
+const tableSettingsPatchSchema = z.object({
+    page_size: tablePageSizeSchema.optional(),
+    hidden_columns: z.array(z.string()).optional(),
+});
+
+const updateUserSettingsSchema = z.object({
+    notifications_enabled: z.boolean().optional(),
+    language: z.enum(SUPPORTED_LOCALES).optional(),
+    table_settings: z
+        .object({
+            [UI_TABLE_NAMES.HOTELS]: tableSettingsPatchSchema.optional(),
+            [UI_TABLE_NAMES.CONTRACTS]: tableSettingsPatchSchema.optional(),
+            [UI_TABLE_NAMES.TEMPLATES]: tableSettingsPatchSchema.optional(),
+            [UI_TABLE_NAMES.PAYMENTS]: tableSettingsPatchSchema.optional(),
+            [UI_TABLE_NAMES.LOGS]: tableSettingsPatchSchema.optional(),
+            [UI_TABLE_NAMES.USERS]: tableSettingsPatchSchema.optional(),
+        })
+        .optional(),
+});
+
+type UpdateUserSettingsInput = z.infer<typeof updateUserSettingsSchema>;
 
 const DEFAULT_USER_SETTINGS = {
     notifications_enabled: true,
@@ -140,9 +170,11 @@ export {
     cloneDefaultUserSettings,
     isTablePageSize,
     normalizeUserSettings,
+    updateUserSettingsSchema,
     type TablePageSize,
     type TableSettings,
     type UITableName,
+    type UpdateUserSettingsInput,
     type UserLanguage,
     type UserSettings,
 };

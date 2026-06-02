@@ -1,11 +1,18 @@
 import type { ApiResponse } from "@tour-manager/shared";
-import type { AxiosRequestConfig, Method } from "axios";
+import { HTTP_HEADERS } from "@tour-manager/shared";
 
+import { resolveRequestLocale } from "@libs/i18n/request-locale";
 import { logger } from "@libs/logger";
-import { httpClient } from "./httpClient";
+import { getRealtimeSocketId } from "@libs/realtime";
 
-type ApiRequestConfig<TFallback = never> = Omit<AxiosRequestConfig, "data" | "method" | "url"> & {
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+type QueryParamValue = boolean | number | string | null | undefined;
+
+type ApiRequestConfig<TFallback = never> = Omit<RequestInit, "body" | "method"> & {
   fallbackData?: TFallback;
+  headers?: HeadersInit;
+  params?: Record<string, QueryParamValue>;
 };
 
 type ApiBodyRequestConfig<TFallback = never> = ApiRequestConfig<TFallback>;
@@ -20,7 +27,7 @@ type RequestOptions<T> = {
   body?: unknown | undefined;
   config?: ApiRequestConfig<T> | undefined;
   kind: "json" | "text";
-  method: Method;
+  method: HttpMethod;
   path: string;
 };
 
@@ -36,6 +43,7 @@ class ApiClientError extends Error {
 }
 
 const apiLogger = logger.child({ area: "api.client" });
+const defaultHeaders = new Headers();
 
 const api = {
   json: {
@@ -72,29 +80,107 @@ async function executeRequest<T>({
   path,
 }: RequestOptions<T>): Promise<T> {
   const isJson = kind === "json";
+  const url = createRequestUrl(path, config?.params);
+  const headers = createRequestHeaders(config?.headers, isJson, body);
+  const { fallbackData: _fallbackData, params: _params, ...requestConfig } = config ?? {};
 
-  const response = await httpClient.request<unknown>({
-    ...config,
-    method,
-    url: path,
-    data: body,
-    responseType: kind,
-    ...(isJson ? { validateStatus: () => true } : {}),
-    headers: {
-      accept: isJson ? "application/json" : "text/plain, text/html, */*",
-      ...config?.headers,
-    },
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      ...requestConfig,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      credentials: requestConfig.credentials ?? "include",
+      headers,
+      method,
+    });
+  } catch (error) {
+    apiLogger.error(
+      {
+        err: error,
+        method,
+        url,
+      },
+      "HTTP request failed",
+      { report: true },
+    );
+
+    throw error;
+  }
 
   if (isJson) {
-    return parseJsonResponse<T>(path, response.status, response.data, config);
+    const data = await readJsonResponse(response);
+    return parseJsonResponse<T>(path, response.status, data, config);
   }
 
-  if (typeof response.data !== "string") {
-    return handleMalformedResponse(path, "text", response.data, config);
+  return (await response.text()) as T;
+}
+
+function createRequestUrl(
+  path: string,
+  params: ApiRequestConfig["params"],
+): string {
+  if (!params) {
+    return path;
   }
 
-  return response.data as T;
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === null || value === undefined) continue;
+    searchParams.set(key, String(value));
+  }
+
+  const query = searchParams.toString();
+  if (!query) {
+    return path;
+  }
+
+  return `${path}${path.includes("?") ? "&" : "?"}${query}`;
+}
+
+function createRequestHeaders(
+  headers: HeadersInit | undefined,
+  isJson: boolean,
+  body: unknown,
+): Headers {
+  const requestHeaders = new Headers(defaultHeaders);
+
+  requestHeaders.set(
+    "accept",
+    isJson ? "application/json" : "text/plain, text/html, */*",
+  );
+  requestHeaders.set(HTTP_HEADERS.APP_LANG, resolveRequestLocale());
+
+  const socketId = getRealtimeSocketId();
+  if (socketId && !requestHeaders.has(HTTP_HEADERS.SOCKET_ID)) {
+    requestHeaders.set(HTTP_HEADERS.SOCKET_ID, socketId);
+  }
+
+  if (body !== undefined && !requestHeaders.has("content-type")) {
+    requestHeaders.set("content-type", "application/json");
+  }
+
+  if (headers) {
+    new Headers(headers).forEach((value, key) => {
+      requestHeaders.set(key, value);
+    });
+  }
+
+  return requestHeaders;
+}
+
+async function readJsonResponse(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }
 
 function parseJsonResponse<T>(
@@ -188,5 +274,9 @@ function isApiResponse<T>(value: unknown): value is ApiResponse<T> {
   return false;
 }
 
-export { ApiClientError, api };
+function setHttpClientDefaultHeader(name: string, value: string): void {
+  defaultHeaders.set(name, value);
+}
+
+export { ApiClientError, api, setHttpClientDefaultHeader };
 export type { ApiBodyRequestConfig, ApiRequestConfig };

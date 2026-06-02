@@ -59,11 +59,15 @@ function useIsAuthenticated() {
 }
 
 function useAuthActions() {
-  return useAuthStore((state) => ({
-    clearUser: state.clearUser,
-    patchSettings: state.patchSettings,
-    setUser: state.setUser,
-  }));
+  const clearUser = useAuthStore((state) => state.clearUser);
+  const patchSettings = useAuthStore((state) => state.patchSettings);
+  const setUser = useAuthStore((state) => state.setUser);
+
+  return {
+    clearUser,
+    patchSettings,
+    setUser,
+  };
 }
 
 export {

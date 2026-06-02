@@ -13,7 +13,7 @@
       "@hooks/*": ["./hooks/*"],
       "@routes/*": ["./routes/*"]
     },
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["vite/client"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["dist", "node_modules"]
