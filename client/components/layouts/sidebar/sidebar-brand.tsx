@@ -21,10 +21,10 @@ function SidebarBrand({ compact = false, userName }: SidebarBrandProps) {
       </div>
       {!compact ? (
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold lg:text-base">
+          <p className="truncate text-base font-semibold lg:text-lg">
             {t("login.brand")}
           </p>
-          <p className="truncate text-xs text-muted-foreground lg:text-sm">
+          <p className="truncate text-base text-muted-foreground">
             {userName}
           </p>
         </div>

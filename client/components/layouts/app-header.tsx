@@ -57,10 +57,10 @@ function AppHeader({
         </HeaderIconButton>
 
         <div className="min-w-0">
-          <h1 className="truncate text-sm font-semibold tracking-normal lg:text-base">
+          <h1 className="truncate text-base font-semibold tracking-normal lg:text-lg">
             {title}
           </h1>
-          <p className="truncate text-xs text-muted-foreground lg:text-sm">
+          <p className="truncate text-base text-muted-foreground">
             {subtitle ?? t("dashboard.header.overview")}
           </p>
         </div>

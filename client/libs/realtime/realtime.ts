@@ -150,12 +150,19 @@ class RealtimeClient {
       return;
     }
 
-    const message = payload as Partial<RealtimeMessage>;
-    if (typeof message.type !== "string") {
+    const message = payload as Partial<RealtimeMessage> & { event?: string };
+    const eventType =
+      typeof message.type === "string"
+        ? message.type
+        : typeof message.event === "string"
+          ? message.event
+          : undefined;
+
+    if (!eventType) {
       return;
     }
 
-    if (message.type === "realtime.connected") {
+    if (eventType === "realtime.connected") {
       const parsed = realtimeConnectedMessageSchema.safeParse(payload);
       if (!parsed.success || !parsed.data.scopes.includes(GLOBAL_SCOPE)) {
         return;
@@ -164,7 +171,7 @@ class RealtimeClient {
       this.socket_id = parsed.data.socket_id;
     }
 
-    const listeners = this.listenersByType.get(message.type);
+    const listeners = this.listenersByType.get(eventType);
     if (!listeners || listeners.size === 0) {
       return;
     }

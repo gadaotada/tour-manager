@@ -41,7 +41,7 @@ function SidebarGroup({ isExpanded, items, labelKey }: SidebarGroupProps) {
   return (
     <div className={cn("space-y-2 px-2", !isExpanded && "w-full")}>
       {isExpanded ? (
-        <p className="px-2 text-xs font-medium text-muted-foreground lg:text-sm">
+        <p className="px-2 text-base font-medium text-muted-foreground">
           {t(labelKey)}
         </p>
       ) : null}

@@ -37,7 +37,7 @@ function SidebarButton({
   const isIconOnly = isExpanded && !showLabel;
   const label = t(labelKey);
   const buttonClassName = cn(
-    isExpanded && !isIconOnly && "h-9 min-w-0 w-full justify-start gap-2 px-2.5 lg:h-10 lg:text-sm",
+    isExpanded && !isIconOnly && "h-9 min-w-0 w-full justify-start gap-2 px-2.5 lg:h-10 lg:text-base",
     (!isExpanded || isIconOnly) && "size-9 shrink-0 justify-center lg:size-10",
     variant === "ghost" &&
       "hover:bg-surface-muted hover:text-foreground dark:hover:bg-surface-muted/80",

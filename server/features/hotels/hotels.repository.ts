@@ -15,7 +15,19 @@ import {
     mutateWithVersion,
     query,
     transaction,
+    type DbMutateResultWithRows,
 } from "@libs/db";
+
+type HotelRow = Omit<Hotel, "is_active"> & {
+    is_active: number | boolean;
+};
+
+function toHotel(row: HotelRow): Hotel {
+    return {
+        ...row,
+        is_active: Boolean(row.is_active),
+    };
+}
 
 async function findHotelById(hotelId: number): Promise<Hotel | undefined> {
     return query(async (qe) => {
@@ -33,9 +45,10 @@ async function findHotelById(hotelId: number): Promise<Hotel | undefined> {
             WHERE id = ?
             LIMIT 1
         `;
-        const rows = await qe.read<Hotel>("execute", sql, [hotelId]);
+        const rows = await qe.read<HotelRow>("execute", sql, [hotelId]);
+        const row = rows[0];
 
-        return rows[0];
+        return row ? toHotel(row) : undefined;
     });
 }
 
@@ -52,7 +65,7 @@ async function listHotels(queryParams: ListHotelsQuery) {
 
     const { sql, values, countSql, countValues } = buildGeneralPaginatedSelectSql(
         "hotels",
-        ["id", ...HOTEL_SORT_BY_COLS],
+        ["id", "version", ...HOTEL_SORT_BY_COLS],
         {
             page: queryParams.page,
             page_size: queryParams.page_size,
@@ -65,17 +78,17 @@ async function listHotels(queryParams: ListHotelsQuery) {
     );
 
     return query(async (qe) => {
-        const rows = await qe.read<Hotel>("execute", sql, values);
+        const rows = await qe.read<HotelRow>("execute", sql, values);
         const count = await qe.read<{ total: number }>("execute", countSql, countValues);
 
         return {
-            rows,
+            rows: rows.map(toHotel),
             total: count[0]?.total ?? 0,
         };
     });
 }
 
-async function createHotel({ name, address, stars }: CreateHotelInput) {
+async function createHotel({ name, address, stars }: CreateHotelInput): Promise<DbMutateResultWithRows<Hotel>> {
     return transaction(async (qe) => {
         const sql = `
             INSERT INTO hotels (name, address, stars) 
@@ -90,9 +103,18 @@ async function createHotel({ name, address, stars }: CreateHotelInput) {
                 created_at,
                 updated_at
         `;
-        const mutation = await qe.mutate<Hotel>("execute", sql, [name, address, stars]);
+        const mutation = await qe.mutate<HotelRow>("execute", sql, [name, address, stars]);
 
-        return mutation;
+        if (!mutation.ok || !mutation.rows?.[0]) {
+            return mutation as DbMutateResultWithRows<Hotel>;
+        }
+
+        return {
+            ok: true,
+            result: mutation.result,
+            rows: [toHotel(mutation.rows[0])],
+            error: null,
+        };
     });
 }
 
