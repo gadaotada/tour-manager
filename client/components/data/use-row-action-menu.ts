@@ -39,4 +39,4 @@ function useRowActionMenu<TItem>({ enabled }: UseRowActionMenuOptions) {
   };
 }
 
-export { useRowActionMenu, type RowActionMenuState };
+export { useRowActionMenu };

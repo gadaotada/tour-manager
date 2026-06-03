@@ -59,8 +59,6 @@ type RealtimeScopeActiveUsersEvent = z.infer<typeof realtimeScopeActiveUsersEven
 
 export {
   REALTIME_SCOPES,
-  presenceJoinMessageSchema,
-  presenceLeaveMessageSchema,
   realtimeClientMessageSchema,
   realtimeConnectedMessageSchema,
   realtimeScopeActiveUserSchema,

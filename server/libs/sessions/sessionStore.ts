@@ -1,6 +1,6 @@
 import session, { type SessionData } from "express-session";
 
-import { QUERY_MODE, query } from "@libs/db";
+import { query } from "@libs/db";
 
 type SessionRow = {
   data: string | SessionData;
@@ -8,6 +8,7 @@ type SessionRow = {
 };
 
 class DbSessionStore extends session.Store {
+  // fallow-ignore-next-line unused-class-member
   get(
     sid: string,
     callback: (err: unknown, session?: SessionData | null) => void,
@@ -36,6 +37,7 @@ class DbSessionStore extends session.Store {
     });
   }
 
+  // fallow-ignore-next-line unused-class-member
   set(sid: string, sessionData: SessionData, callback?: (err?: unknown) => void): void {
     query(async (qe) => {
       const expiresAt = getSessionExpiresAt(sessionData);
@@ -59,6 +61,7 @@ class DbSessionStore extends session.Store {
     });
   }
 
+  // fallow-ignore-next-line unused-class-member
   destroy(sid: string, callback?: (err?: unknown) => void): void {
     query(async (qe) => {
       await qe.mutate(
@@ -74,6 +77,7 @@ class DbSessionStore extends session.Store {
     });
   }
 
+  // fallow-ignore-next-line unused-class-member
   touch(sid: string, sessionData: SessionData, callback?: (err?: unknown) => void): void {
     query(async (qe) => {
       await qe.mutate(

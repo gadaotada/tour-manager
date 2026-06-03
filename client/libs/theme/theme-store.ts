@@ -1,8 +1,14 @@
-import { UI_THEMES, applyUiTheme, DEFAULT_UI_THEME, normalizeUiTheme, type UiTheme } from "./theme";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-const THEME_STORAGE_KEY = "tour-manager.ui.theme";
+import {
+  UI_THEMES,
+  applyUiTheme,
+  DEFAULT_UI_THEME,
+  normalizeUiTheme,
+  THEME_STORAGE_KEY,
+  type UiTheme,
+} from "./theme";
 
 type ThemeState = {
   theme: UiTheme;
@@ -73,4 +79,4 @@ function initThemeStore(): void {
   mediaQuery.addEventListener("change", handleSystemThemeChange);
 }
 
-export { initThemeStore, THEME_STORAGE_KEY, useThemeStore };
+export { initThemeStore, useThemeStore };

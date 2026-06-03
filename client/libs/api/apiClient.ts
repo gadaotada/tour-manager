@@ -279,4 +279,3 @@ function setHttpClientDefaultHeader(name: string, value: string): void {
 }
 
 export { ApiClientError, api, setHttpClientDefaultHeader };
-export type { ApiBodyRequestConfig, ApiRequestConfig };

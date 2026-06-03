@@ -222,7 +222,6 @@ export {
     QUERY_MODE,
     type DbMutateResult,
     type DbMutateResultWithRows,
-    type DbReadResult,
     type QueryMode,
     query,
     transaction,

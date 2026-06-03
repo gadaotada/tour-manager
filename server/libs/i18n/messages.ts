@@ -48,4 +48,4 @@ type MessageKey =
 
 const translate = createTranslator(serverMessages);
 
-export { serverMessages as messages, type MessageKey, translate };
+export { type MessageKey, translate };

@@ -62,7 +62,6 @@ const buildPaginatedResult = <TData, TQuery>(
 };
 
 export {
-    PAGINATION_LIMITS,
     normalizePagination,
     buildPaginatedResult,
     type PaginatedResult,

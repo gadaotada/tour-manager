@@ -440,4 +440,4 @@ class RealtimeGateway {
 
 const wsGateway = new RealtimeGateway();
 
-export { wsGateway, type RealtimeGatewayOptions, type RealtimeUserResolver };
+export { wsGateway };

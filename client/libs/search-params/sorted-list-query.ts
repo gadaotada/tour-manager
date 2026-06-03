@@ -71,8 +71,4 @@ function normalizePageSize(raw: unknown, fallback = DEFAULT_TABLE_PAGE_SIZE): nu
   return fallback;
 }
 
-export {
-  createSortedListSearchNormalizer,
-  normalizePageSize,
-  type SortedListQuery,
-};
+export { createSortedListSearchNormalizer };

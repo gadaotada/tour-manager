@@ -53,4 +53,4 @@ const useLocaleStore = create<LocaleState>()(
   ),
 );
 
-export { LOCALE_STORAGE_KEY, useLocaleStore };
+export { useLocaleStore };

@@ -44,6 +44,29 @@ export const healthService = {
 };
 ```
 
+## Fallow Checks
+
+- Fallow is installed as a root dev dependency; run it with `npx --no-install fallow`.
+- For large refactors, feature implementations, public API changes, dependency changes, or architecture cleanup, run Fallow before handing work back.
+- Prefer scoped checks when the work is limited to one workspace:
+
+```bash
+npx --no-install fallow dead-code --workspace client --format json --quiet 2>/dev/null || true
+npx --no-install fallow dead-code --workspace server --format json --quiet 2>/dev/null || true
+npx --no-install fallow dupes --workspace client --format json --quiet 2>/dev/null || true
+npx --no-install fallow dupes --workspace server --format json --quiet 2>/dev/null || true
+```
+
+- For cross-workspace work, run root Fallow with JSON output:
+
+```bash
+npx --no-install fallow --format json --quiet 2>/dev/null || true
+```
+
+- Treat dead code, unresolved/unlisted dependencies, duplicate exports, circular dependencies, re-export cycles, and boundary violations as actionable unless there is a documented framework or planned-dependency reason.
+- Treat Fallow CRAP/test-coverage health findings as advisory unless the user explicitly asks for testing work.
+- Do not apply `fallow fix` directly; run `fallow fix --dry-run --format json --quiet 2>/dev/null || true`, review the proposed edits, then make intentional scoped changes.
+
 ## Async Fire-And-Forget
 
 - Do not write `void caller()` to silence a promise or mark fire-and-forget work.

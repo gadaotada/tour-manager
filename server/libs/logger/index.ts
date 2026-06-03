@@ -1,1 +1,1 @@
-export { createServerLogger, logger, type ServerLoggerConfig } from "./logger";
+export { logger } from "./logger";

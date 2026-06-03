@@ -87,12 +87,4 @@ const mutateWithVersion = async (
     throw new DbError(toOptimisticMutationError(miss));
 };
 
-export {
-    type OptimisticMutationMiss,
-    type OptimisticMutationOptions,
-    type VersionRow,
-    classifyOptimisticMutationMiss,
-    hasAffectedRows,
-    mutateWithVersion,
-    toOptimisticMutationError,
-};
+export { mutateWithVersion };

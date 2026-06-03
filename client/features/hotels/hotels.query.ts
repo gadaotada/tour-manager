@@ -59,7 +59,6 @@ function hotelsQueryToFilters(query: ListHotelsQuery): HotelsListFilters {
 
 export {
   DEFAULT_HOTELS_LIST_FILTERS,
-  DEFAULT_HOTELS_QUERY,
   hotelsQueryToFilters,
   normalizeHotelsSearch,
   type HotelsListFilters,

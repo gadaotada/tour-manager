@@ -100,4 +100,4 @@ function buildGeneralPaginatedSelectSql(tableName: string, cols: readonly string
     return { sql, values, countSql, countValues };
 }
 
-export { buildGeneralUpdateSql, buildGeneralPaginatedSelectSql, type PaginationFilter };
+export { buildGeneralUpdateSql, buildGeneralPaginatedSelectSql };

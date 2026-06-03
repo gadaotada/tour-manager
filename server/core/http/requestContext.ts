@@ -49,8 +49,6 @@ const requestContextMiddleware = (logger: Logger): RequestHandler => {
 };
 
 export {
-    type RequestContext,
-    attachRequestContext,
     getRequestContext,
     requestContextMiddleware,
 };

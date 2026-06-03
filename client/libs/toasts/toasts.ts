@@ -46,4 +46,4 @@ const toast = {
   },
 };
 
-export { toast, useToastsStore, type Toast, type ToastKind };
+export { toast, useToastsStore };

@@ -227,7 +227,6 @@ export {
   disconnectRealtime,
   ensureRealtimeConnection,
   getRealtimeSocketId,
-  realtimeClient,
   setRealtimeRouteScope,
   subscribeRealtimeEvent,
   type RealtimeListener,

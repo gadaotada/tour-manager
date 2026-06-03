@@ -44,4 +44,4 @@ function AppShell({
   );
 }
 
-export { APP_SHELL_SIDEBAR_WIDTH, AppShell };
+export { AppShell };

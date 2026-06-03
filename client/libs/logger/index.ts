@@ -1,1 +1,1 @@
-export { createBrowserLogger, logger, type BrowserLoggerConfig } from "./logger";
+export { logger } from "./logger";

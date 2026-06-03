@@ -1,11 +1,14 @@
 import { Fragment, useState, type ReactNode } from "react";
 import { useMatches, useNavigate } from "@tanstack/react-router";
 
-import { AppHeader, AppMain, AppShell, AppSidebar } from "@components/layouts";
 import { logout } from "@features/login";
 import { useAuthUser } from "@core/stores";
 import { t } from "@libs/i18n";
 
+import { AppHeader } from "./app-header";
+import { AppMain } from "./app-main";
+import { AppShell } from "./app-shell";
+import { AppSidebar } from "./sidebar";
 import { usePagePresence } from "./use-page-presence";
 
 type AppPageLayoutProps = {
@@ -33,7 +36,7 @@ function AppPageLayout({ children, className = "" }: AppPageLayoutProps) {
   function handleCloseMobileSidebar() {
     setIsMobileSidebarOpen(false);
   }
-  
+
   function handleToggleDesktopSidebar() {
     setIsDesktopSidebarExpanded((value) => !value);
   }
@@ -88,4 +91,4 @@ function useAppPageTitle(): string {
   return t("dashboard.title");
 }
 
-export { AppPageLayout, useAppPageTitle };
+export { AppPageLayout };

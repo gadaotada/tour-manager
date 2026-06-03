@@ -5,11 +5,8 @@ export {
   invalidCredentialsError,
   unauthenticatedError,
 } from "./authErrors";
-export { toDbAppError } from "./appErrors";
 export { errorMiddleware } from "./errorMiddleware";
 export {
-    type RequestContext,
-    attachRequestContext,
     getRequestContext,
     requestContextMiddleware,
 } from "./requestContext";

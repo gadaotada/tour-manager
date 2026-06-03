@@ -175,5 +175,4 @@ const logger = createBrowserLogger({
   },
 });
 
-export { createBrowserLogger, logger };
-export type { BrowserLoggerConfig };
+export { logger };

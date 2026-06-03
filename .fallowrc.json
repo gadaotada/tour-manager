@@ -1,9 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   "entry": [
-    "client/main.{ts,tsx,js,jsx}",
-    "server/src/index.{ts,tsx,js,jsx}",
-    "shared/src/index.{ts,tsx,js,jsx}"
+    "client/main.tsx",
+    "server/index.ts",
+    "shared/index.ts"
   ],
   "workspaces": {
     "packages": [
@@ -12,20 +12,145 @@
       "shared"
     ]
   },
-    "ignorePatterns": [
+  "ignorePatterns": [
     "client/components/ui/**"
+  ],
+  "ignoreDependencies": [
+    "multer",
+    "radix-ui"
   ],
   "ignoreExports": [
     {
       "file": "client/components/ui/**",
       "exports": ["*"]
+    },
+    {
+      "file": "server/core/controllers/adapters.ts",
+      "exports": ["fromExpress"]
+    },
+    {
+      "file": "server/core/controllers/index.ts",
+      "exports": ["fromExpress"]
     }
   ],
+  "boundaries": {
+    "zones": [
+      {
+        "name": "server-core",
+        "patterns": ["server/core/**"]
+      },
+      {
+        "name": "server-libs",
+        "patterns": ["server/libs/**"]
+      },
+      {
+        "name": "server-features",
+        "patterns": ["server/features/**"]
+      },
+      {
+        "name": "client-core",
+        "patterns": ["client/core/**"]
+      },
+      {
+        "name": "client-libs",
+        "patterns": ["client/libs/**"]
+      },
+      {
+        "name": "client-components",
+        "patterns": ["client/components/**"]
+      },
+      {
+        "name": "client-features",
+        "patterns": ["client/features/**"]
+      },
+      {
+        "name": "client-routes",
+        "patterns": ["client/routes/**"]
+      },
+      {
+        "name": "shared-libs",
+        "patterns": ["shared/libs/**"]
+      },
+      {
+        "name": "shared-schemas",
+        "patterns": ["shared/schemas/**"]
+      },
+      {
+        "name": "shared-types",
+        "patterns": ["shared/types/**"]
+      }
+    ],
+    "rules": [
+      {
+        "from": "server-libs",
+        "allow": ["server-libs", "shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "server-core",
+        "allow": ["server-core", "server-libs", "shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "server-features",
+        "allow": ["server-features", "server-core", "server-libs", "shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "client-libs",
+        "allow": ["client-libs", "shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "client-core",
+        "allow": ["client-core", "client-libs", "shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "client-components",
+        "allow": ["client-components", "client-features", "client-core", "client-libs", "shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "client-features",
+        "allow": ["client-features", "client-components", "client-core", "client-libs", "shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "client-routes",
+        "allow": ["client-routes", "client-features", "client-components", "client-core", "client-libs", "shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "shared-libs",
+        "allow": ["shared-libs"]
+      },
+      {
+        "from": "shared-schemas",
+        "allow": ["shared-libs", "shared-schemas", "shared-types"]
+      },
+      {
+        "from": "shared-types",
+        "allow": ["shared-libs", "shared-schemas", "shared-types"]
+      }
+    ]
+  },
   "duplicates": {
     "minOccurrences": 3,
     "ignore": [
       "client/components/ui/**"
     ]
   },
-  "rules": {}
+  "rules": {
+    "unused-files": "error",
+    "unused-exports": "error",
+    "unused-types": "error",
+    "private-type-leaks": "off",
+    "unused-dependencies": "error",
+    "unused-dev-dependencies": "warn",
+    "unused-optional-dependencies": "warn",
+    "unused-enum-members": "error",
+    "unused-class-members": "error",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "error",
+    "type-only-dependencies": "warn",
+    "test-only-dependencies": "warn",
+    "circular-dependencies": "error",
+    "re-export-cycle": "warn",
+    "boundary-violation": "error",
+    "stale-suppressions": "warn"
+  }
 }

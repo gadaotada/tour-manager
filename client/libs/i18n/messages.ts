@@ -302,4 +302,4 @@ type MessageKey =
 
 const translate = createTranslator(clientMessages);
 
-export { clientMessages as messages, type MessageKey, translate };
+export { type MessageKey, translate };

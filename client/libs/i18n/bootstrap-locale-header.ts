@@ -20,4 +20,4 @@ function bootstrapLocaleHeaderSync(): void {
   });
 }
 
-export { bootstrapLocaleHeaderSync, syncRequestLocaleHeader };
+export { bootstrapLocaleHeaderSync };

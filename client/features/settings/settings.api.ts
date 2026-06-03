@@ -14,4 +14,4 @@ async function resetUserSettings(): Promise<UserSettings> {
     return api.json.delete<UserSettings>("/api/settings/user/delete");
 }
 
-export { getUserSettings, resetUserSettings, updateUserSettings };
+export { updateUserSettings };

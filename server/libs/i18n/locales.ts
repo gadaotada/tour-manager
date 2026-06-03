@@ -6,4 +6,4 @@ const resolveLocale = (req: Request): Locale => {
   return normalizeLocale(header);
 };
 
-export { HTTP_HEADERS, resolveLocale };
+export { resolveLocale };

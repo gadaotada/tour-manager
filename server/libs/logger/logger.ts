@@ -159,5 +159,4 @@ const logger = createServerLogger({
   },
 });
 
-export { createServerLogger, logger };
-export type { ServerLoggerConfig };
+export { logger };

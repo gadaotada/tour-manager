@@ -20,4 +20,4 @@ function useT() {
     );
 }
 
-export { getClientLocale, t, useT };
+export { t, useT };

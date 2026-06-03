@@ -123,5 +123,4 @@ export {
     sendBody,
     serializeClientError,
     type ClientErrorBody,
-    type NegotiatedResponseType,
 };

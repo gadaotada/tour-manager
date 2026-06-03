@@ -50,14 +50,6 @@ function useAuthUser() {
   return useAuthStore((state) => state.user);
 }
 
-function useAuthStatus() {
-  return useAuthStore((state) => state.status);
-}
-
-function useIsAuthenticated() {
-  return useAuthStore((state) => state.status === "authenticated");
-}
-
 function useAuthActions() {
   const clearUser = useAuthStore((state) => state.clearUser);
   const patchSettings = useAuthStore((state) => state.patchSettings);
@@ -70,12 +62,4 @@ function useAuthActions() {
   };
 }
 
-export {
-  authStore,
-  useAuthActions,
-  useAuthStatus,
-  useAuthStore,
-  useAuthUser,
-  useIsAuthenticated,
-  type AuthStatus,
-};
+export { authStore, useAuthActions, useAuthUser };

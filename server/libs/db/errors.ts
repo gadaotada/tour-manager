@@ -98,14 +98,10 @@ const toPublicDbError = (error: unknown): PublicDbError => {
 export {
   DB_ERROR_CODES,
   DB_ERROR_MESSAGE_KEYS,
-  MYSQL_ERROR_CODES,
   DbError,
   type DbErrorCode,
   type DbErrorMessageKey,
   type PublicDbError,
-  getMysqlErrorCode,
-  hasMysqlErrorCode,
-  isDuplicateEntryError,
   isRetryableDbError,
   toPublicDbError,
 };

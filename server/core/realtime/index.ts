@@ -1,1 +1,1 @@
-export { wsGateway, type RealtimeGatewayOptions, type RealtimeUserResolver } from "./gateway";
+export { wsGateway } from "./gateway";

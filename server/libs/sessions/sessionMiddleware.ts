@@ -21,4 +21,4 @@ const sessionMiddleware = session({
   },
 });
 
-export { SESSION_TTL_MS, sessionMiddleware };
+export { sessionMiddleware };

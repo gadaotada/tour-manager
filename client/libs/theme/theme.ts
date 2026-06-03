@@ -46,7 +46,6 @@ export {
   applyUiTheme,
   DEFAULT_UI_THEME,
   normalizeUiTheme,
-  resolveUiTheme,
   THEME_STORAGE_KEY,
   UI_THEMES,
   type UiTheme,
