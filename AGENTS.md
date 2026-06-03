@@ -119,6 +119,39 @@ Example shared DTO shape:
 - `applyUiTheme` sets `class`, `data-theme`, and `colorScheme` on `document.documentElement`.
 - A blocking inline script in `client/index.html` is **recommended** (not required) to apply the saved theme before the bundle loads and avoid a flash of the wrong theme.
 
+## Client Forms (TanStack Form)
+
+- Use `@tanstack/react-form` for client forms. Pass shared Zod schemas directly as TanStack Standard Schema validators:
+  - `validators: { onSubmit: schema }` for submit-only validation.
+  - `validators: { onBlur: schema, onSubmit: schema }` for RHF-style `validateOnBlur`.
+  - `validators: { onChange: schema, onSubmit: schema }` only when live validation is desired.
+- Always call `form.handleSubmit()` from the native `<form onSubmit>` handler after `preventDefault()` / `stopPropagation()`. A submit button alone does not call TanStack submit logic.
+- Do not manually `safeParse` again inside `onSubmit` unless schema output/transforms are needed. TanStack validates before `onSubmit`, but it passes the input value, not transformed output. Example: keep a final `schema.parse(value)` for `.trim()` / transforms if the API should receive transformed data.
+- Do not spread TanStack `field` into inputs. `field` is an API object, not DOM props. Use form adapters from `@libs/forms` such as `FormTextField`, `FormFieldError`, and `FormSubmitButtons`.
+- Use `FormSubmitButtons` for repeated submit footer/button behavior. Use `requireDirty` when a submit/save action should be disabled until the form differs from its `defaultValues`.
+- Use `state.canSubmit`, `state.isSubmitting`, and `state.isDirty` via `form.Subscribe` for submit button state. Do not duplicate this state in React `useState`.
+- For API validation errors, map `ApiClientError.payload.details.fieldErrors` through helpers in `@libs/forms` and push them into TanStack's `onServer` error map when field-level display is needed.
+- Only clear server field errors on change when that behavior is explicit and desired for the form. Do not hide this policy inside generic field adapters.
+- Shared Zod validation messages must be message keys added to `commonMessages` in both `en` and `bg`; client field error components translate those keys.
+
+## Client List Loading And Realtime Refetch
+
+- Do not replace an existing table/list with a loading message during background refetches. This causes flicker, especially when WebSocket events call `router.invalidate()`.
+- For route-loader backed lists, distinguish initial load from background refresh:
+
+```ts
+const showInitialLoading = isLoading && !result;
+```
+
+- Pass `showInitialLoading` to list containers such as `ListPageSection`; keep existing rows and pagination mounted while a refetch is pending.
+- WebSocket-triggered refresh handlers should call `router.invalidate().catch(...)` and handle rejection explicitly. Do not leave floating router promises.
+- Search/filter navigation should avoid unnecessary navigations when the normalized target query is already equal to current state.
+
+## Client Navigation And Toasts
+
+- Sidebar active state should come from the current router pathname, with exact-or-child matching (`pathname === to || pathname.startsWith(`${to}/`)`). Do not rely on broad fuzzy matches that can keep the wrong section active.
+- App toasts live in `client/libs/toasts`. Keep toast stacks top-right, on a solid popover surface, with clear success/error icons and accessible roles (`alert` for errors, `status` for success). Avoid bottom-corner modal-like toasts and translucent destructive backgrounds over overlays.
+
 ## Server Controllers
 
 - Use the functional builder in `server/core/controllers/` — import from `@core/controllers`.

@@ -10,3 +10,4 @@ coverage
 client/routeTree.gen.ts
 playwright-report
 test-results
+.fallow/

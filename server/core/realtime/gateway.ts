@@ -7,10 +7,13 @@ import {
   REALTIME_SCOPES,
   REALTIME_URL_PARSE_BASE,
   REALTIME_WS_PATH,
+  ROLES,
   realtimeClientMessageSchema,
   realtimeConnectedMessageSchema,
+  realtimeScopeActiveUsersEventSchema,
   realtimeScopeSchema,
   type RealtimeScope,
+  type RealtimeScopeActiveUser,
 } from "@tour-manager/shared";
 import type { RequestHandler } from "express";
 import type { SessionData } from "express-session";
@@ -217,7 +220,10 @@ class RealtimeGateway {
       sockets.delete(socket);
       if (sockets.size === 0) {
         this.socketsByScope.delete(scope);
+        continue;
       }
+
+      this.emitScopeActiveUsers(scope);
     }
 
     this.scopesBySocket.delete(socket);
@@ -292,6 +298,7 @@ class RealtimeGateway {
     const sockets = this.socketsByScope.get(scope) ?? new Set<WebSocket>();
     sockets.add(socket);
     this.socketsByScope.set(scope, sockets);
+    this.emitScopeActiveUsers(scope);
   }
 
   private leaveScope(socket: WebSocket, scope: RealtimeScope): void {
@@ -313,12 +320,59 @@ class RealtimeGateway {
     sockets.delete(socket);
     if (sockets.size === 0) {
       this.socketsByScope.delete(scope);
+      return;
     }
+
+    this.emitScopeActiveUsers(scope);
   }
 
   private removeSocket(socket: WebSocket): void {
     this.clearSocketScopes(socket);
     this.metaBySocket.delete(socket);
+  }
+
+  private emitScopeActiveUsers(scope: RealtimeScope): void {
+    const sockets = this.socketsByScope.get(scope);
+    if (!sockets || sockets.size === 0) {
+      return;
+    }
+
+    const visibleUsersById = new Map<string, RealtimeScopeActiveUser>();
+
+    for (const socket of sockets) {
+      const meta = this.metaBySocket.get(socket);
+      if (!meta || meta.user.role === ROLES.ADMIN) {
+        continue;
+      }
+
+      visibleUsersById.set(meta.user.id, {
+        id: meta.user.id,
+        username: meta.user.username,
+        display_name: meta.user.display_name || meta.user.username,
+      });
+    }
+
+    const occurred_at = new Date().toISOString();
+
+    for (const socket of sockets) {
+      const meta = this.metaBySocket.get(socket);
+      if (!meta) {
+        continue;
+      }
+
+      const users = [...visibleUsersById.values()].filter(
+        (user) => user.id !== meta.user.id,
+      );
+      const event = realtimeScopeActiveUsersEventSchema.parse({
+        type: "scope.active_users",
+        scope,
+        active_users: users.length,
+        users,
+        occurred_at,
+      });
+
+      this.sendJson(socket, event);
+    }
   }
 
   private sendJson(socket: WebSocket, payload: unknown): void {

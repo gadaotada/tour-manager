@@ -7,8 +7,12 @@ export {
   REALTIME_SCOPES,
   realtimeClientMessageSchema,
   realtimeConnectedMessageSchema,
+  realtimeScopeActiveUserSchema,
+  realtimeScopeActiveUsersEventSchema,
   realtimeScopeSchema,
   type RealtimeClientMessage,
   type RealtimeConnectedMessage,
   type RealtimeScope,
+  type RealtimeScopeActiveUser,
+  type RealtimeScopeActiveUsersEvent,
 } from "./schemas";

@@ -6,6 +6,8 @@ import { logout } from "@features/login";
 import { useAuthUser } from "@core/stores";
 import { t } from "@libs/i18n";
 
+import { usePagePresence } from "./use-page-presence";
+
 type AppPageLayoutProps = {
   children: ReactNode;
   className?: string;
@@ -15,6 +17,7 @@ function AppPageLayout({ children, className = "" }: AppPageLayoutProps) {
   const navigate = useNavigate();
   const user = useAuthUser();
   const title = useAppPageTitle();
+  const presence = usePagePresence();
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -43,6 +46,7 @@ function AppPageLayout({ children, className = "" }: AppPageLayoutProps) {
           isSidebarExpanded={isDesktopSidebarExpanded}
           onOpenMobileSidebar={handleOpenMobileSidebar}
           onToggleDesktopSidebar={handleToggleDesktopSidebar}
+          presence={presence}
           title={title}
         />
       }

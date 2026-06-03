@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "client/main.{ts,tsx,js,jsx}",
+    "server/src/index.{ts,tsx,js,jsx}",
+    "shared/src/index.{ts,tsx,js,jsx}"
+  ],
+  "workspaces": {
+    "packages": [
+      "client",
+      "server",
+      "shared"
+    ]
+  },
+    "ignorePatterns": [
+    "client/components/ui/**"
+  ],
+  "ignoreExports": [
+    {
+      "file": "client/components/ui/**",
+      "exports": ["*"]
+    }
+  ],
+  "duplicates": {
+    "minOccurrences": 3,
+    "ignore": [
+      "client/components/ui/**"
+    ]
+  },
+  "rules": {}
+}

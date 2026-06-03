@@ -219,10 +219,17 @@ function subscribeRealtimeEvent(
   return realtimeClient.on(eventType, listener);
 }
 
+function setRealtimeRouteScope(scope: RouteRealtimeScope | null): void {
+  realtimeClient.setRouteScope(scope);
+}
+
 export {
   disconnectRealtime,
   ensureRealtimeConnection,
   getRealtimeSocketId,
   realtimeClient,
+  setRealtimeRouteScope,
   subscribeRealtimeEvent,
+  type RealtimeListener,
+  type RouteRealtimeScope,
 };
