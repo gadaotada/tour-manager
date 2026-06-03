@@ -2,8 +2,11 @@ import type {
   CreateUserInput,
   ListUsersQuery,
   ManagedUser,
+  UpdateUserPermissionsInput,
   UpdateUserInput,
   UpdateUserStatusInput,
+  UserDetail,
+  UserPermissionOverride,
   UsersListResult,
 } from "@tour-manager/shared";
 
@@ -38,6 +41,10 @@ async function listUsers(query: ListUsersQuery): Promise<UsersListResult> {
   });
 }
 
+async function getUserDetail(userId: string): Promise<UserDetail> {
+  return api.json.get<UserDetail>(`/api/users/detail/${userId}`);
+}
+
 async function createUser(input: CreateUserInput): Promise<ManagedUser> {
   return api.json.post<ManagedUser>("/api/users/create", input);
 }
@@ -53,8 +60,26 @@ async function updateUserStatus(
   return api.json.put<ManagedUser>(`/api/users/update-status/${userId}`, input);
 }
 
+async function updateUserPermissions(
+  userId: string,
+  input: UpdateUserPermissionsInput,
+): Promise<UserPermissionOverride[]> {
+  return api.json.put<UserPermissionOverride[]>(
+    `/api/users/update-permissions/${userId}`,
+    input,
+  );
+}
+
 async function deleteUser(userId: string): Promise<void> {
   await api.json.delete<null>(`/api/users/delete/${userId}`);
 }
 
-export { createUser, deleteUser, listUsers, updateUser, updateUserStatus };
+export {
+  createUser,
+  deleteUser,
+  getUserDetail,
+  listUsers,
+  updateUserPermissions,
+  updateUser,
+  updateUserStatus,
+};

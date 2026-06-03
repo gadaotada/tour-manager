@@ -111,7 +111,7 @@ class BrowserLogger implements Logger {
   ): void {
     if (!this.state.reporter) return;
 
-    this.state.reporter.captureError({
+    void this.state.reporter.captureError({
       level,
       message,
       meta,
@@ -162,7 +162,7 @@ const createBrowserLogger = (config: BrowserLoggerConfig): Logger => {
 
 const logger = createBrowserLogger({
   level: normalizeLogLevel(
-    import.meta.env.VITE_LOG_LEVEL,
+    import.meta.env.VITE_LOG_LEVEL as LogLevel | undefined,
     import.meta.env.MODE === "test" ? "silent" : import.meta.env.DEV ? "debug" : "info",
   ),
   reportErrors: import.meta.env.VITE_LOG_REPORT_ERRORS === "true",

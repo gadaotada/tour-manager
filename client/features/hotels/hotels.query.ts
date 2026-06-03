@@ -16,8 +16,6 @@ const hotelsListSearch = createSortedListSearchNormalizer<ListHotelsQuery["sort_
   sortByValues: HOTEL_SORT_BY_COLS,
 });
 
-const DEFAULT_HOTELS_QUERY: ListHotelsQuery = hotelsListSearch.defaultQuery;
-
 const DEFAULT_HOTELS_LIST_FILTERS: HotelsListFilters = {
   is_active: "all",
   search: "",

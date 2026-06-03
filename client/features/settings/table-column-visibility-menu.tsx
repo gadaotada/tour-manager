@@ -83,8 +83,8 @@ function TableColumnVisibilityMenu<TColumnId extends string>({
                             key={column.id}
                             checked={checked}
                             disabled={saving || isLastVisibleColumn}
-                            onCheckedChange={(nextChecked) => {
-                                toggleColumn(column.id, nextChecked === true);
+                            onCheckedChange={async (nextChecked) => {
+                                await toggleColumn(column.id, nextChecked === true);
                             }}
                         >
                             <span

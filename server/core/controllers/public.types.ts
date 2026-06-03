@@ -1,6 +1,6 @@
 import type { Logger } from "@tour-manager/shared";
 import type { Request, Response } from "express";
-import { z, type ZodTypeAny } from "zod";
+import type { z, ZodTypeAny } from "zod";
 
 import type { RequestSchemas } from "@core/validation";
 

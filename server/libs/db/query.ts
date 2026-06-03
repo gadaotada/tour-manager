@@ -97,8 +97,8 @@ class QueryEngine {
 
     constructor(connection: PoolConnection) {
         this.methods = {
-            execute: connection.execute.bind(connection) as ConnectionMethod,
-            query: connection.query.bind(connection) as ConnectionMethod,
+            execute: connection.execute.bind(connection),
+            query: connection.query.bind(connection),
         };
     }
 

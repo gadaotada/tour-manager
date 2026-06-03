@@ -23,6 +23,8 @@ export {
     type CreateUserInput,
     type ListUsersQuery,
     type ManagedUser,
+    type UpdateUserPermissionsInput,
+    type UserDetail,
     type UpdateUserInput,
     type UpdateUserStatusInput,
     type UserIdParams,

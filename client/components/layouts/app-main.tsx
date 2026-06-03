@@ -13,7 +13,7 @@ function AppMain({ children, className }: AppMainProps) {
       <div className="h-full overflow-y-auto">
         <div
           className={cn(
-            "w-full p-2",
+            "flex min-h-full w-full flex-col p-2",
             className,
           )}
         >

@@ -10,7 +10,6 @@ import {
   type CreateUserInput,
   type ListUsersQuery,
   type ManagedUser,
-  type Role,
   type UpdateUserInput,
   type UserRealtimePayload,
   type UsersListResult,
@@ -18,12 +17,20 @@ import {
 
 import { wsGateway } from "@core/realtime";
 import { AppError, forbiddenError } from "@core/http";
+import { buildPaginatedResult } from "@libs/db";
+import {
+  assertCanCreateRole,
+  assertCanDeleteRole,
+  assertCanReadRole,
+  assertCanUpdateRole,
+  canReadRole,
+} from "./users.policy";
 import { usersRepository } from "./users.repository";
 
 function emitUserEvent(
   event: UserRealtimePayload["event"],
   userId: string,
-  visibleRoles: readonly Role[],
+  visibleRoles: readonly ManagedUser["role"][],
   exclude_socket_id: string | undefined,
 ): void {
   const payload: UserRealtimePayload = {
@@ -35,7 +42,7 @@ function emitUserEvent(
 
   wsGateway.emitToScope("users", payload, {
     exclude_socket_id,
-    filter: (viewer) => visibleRoles.some((role) => canViewUserRole(viewer, role)),
+    filter: (viewer) => visibleRoles.some((role) => canReadRole(viewer, role)),
   });
 }
 
@@ -57,20 +64,13 @@ async function listUsers(
     queryParams: sanitizedQuery,
   });
 
-  return {
-    data: rows,
-    total,
+  return buildPaginatedResult({
     page: query.page,
     page_size: query.page_size,
-    last_page: Math.max(1, Math.ceil(total / query.page_size)),
-    query: {
-      search: sanitizedQuery.search,
-      role: sanitizedQuery.role,
-      is_enabled: sanitizedQuery.is_enabled,
-      sort_by: sanitizedQuery.sort_by,
-      sort_dir: sanitizedQuery.sort_dir,
-    },
-  };
+    total,
+    data: rows,
+    query: sanitizedQuery
+  });
 }
 
 async function createUser(
@@ -181,65 +181,9 @@ async function getTargetUser(actor: ClientUser, userId: string): Promise<Managed
     );
   }
 
-  if (user.role === ROLES.ADMIN && !hasPermission(actor.permissions, PERMISSIONS.USERS.READ_ANY)) {
-    throw forbiddenError();
-  }
+  assertCanReadRole(actor, user.role);
 
   return user;
-}
-
-function assertCanCreateRole(actor: ClientUser, role: Role): void {
-  if (hasPermission(actor.permissions, PERMISSIONS.USERS.CREATE_ANY)) return;
-
-  if (
-    isNonAdminRole(role) &&
-    hasPermission(actor.permissions, PERMISSIONS.USERS.CREATE_NON_ADMIN)
-  ) {
-    return;
-  }
-
-  throw forbiddenError();
-}
-
-function assertCanUpdateRole(actor: ClientUser, role: Role): void {
-  if (hasPermission(actor.permissions, PERMISSIONS.USERS.UPDATE_ANY)) return;
-
-  if (
-    isNonAdminRole(role) &&
-    hasPermission(actor.permissions, PERMISSIONS.USERS.UPDATE_NON_ADMIN)
-  ) {
-    return;
-  }
-
-  throw forbiddenError();
-}
-
-function assertCanDeleteRole(actor: ClientUser, role: Role): void {
-  if (hasPermission(actor.permissions, PERMISSIONS.USERS.DELETE_ANY)) return;
-
-  if (
-    isNonAdminRole(role) &&
-    hasPermission(actor.permissions, PERMISSIONS.USERS.DELETE_NON_ADMIN)
-  ) {
-    return;
-  }
-
-  throw forbiddenError();
-}
-
-function canViewUserRole(viewer: ClientUser, role: Role): boolean {
-  if (hasPermission(viewer.permissions, PERMISSIONS.USERS.READ_ANY)) {
-    return true;
-  }
-
-  return isNonAdminRole(role) && hasPermission(
-    viewer.permissions,
-    PERMISSIONS.USERS.READ_NON_ADMIN,
-  );
-}
-
-function isNonAdminRole(role: Role): boolean {
-  return role !== ROLES.ADMIN;
 }
 
 const usersService = {

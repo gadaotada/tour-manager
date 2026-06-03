@@ -1,5 +1,7 @@
 import type { RequestHandler } from "express";
 
+import { toError } from "@libs/errors";
+
 import type { AppMiddleware, ProceedSignal } from "./public.types";
 
 // Adapts a classic Express middleware into an AppMiddleware so it can run inside
@@ -24,7 +26,7 @@ function fromExpress(handler: RequestHandler): AppMiddleware {
                 ctx.res.off("finish", onFinish);
 
                 if (err) {
-                    reject(err instanceof Error ? err : new Error(String(err)));
+                    reject(toError(err, { fallbackMessage: "Express middleware failed" }));
                     return;
                 }
 

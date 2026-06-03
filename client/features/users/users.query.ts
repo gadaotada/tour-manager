@@ -23,6 +23,8 @@ const usersListSearch = createSortedListSearchNormalizer<ListUsersQuery["sort_by
   sortByValues: USER_SORT_BY_COLS,
 });
 
+const DEFAULT_USERS_QUERY: ListUsersQuery = usersListSearch.defaultQuery;
+
 function normalizeUsersSearch(raw: Record<string, unknown>): ListUsersQuery {
   const baseQuery = usersListSearch.normalizeBaseListSearch(raw);
   const role = normalizeStringSearchParam(raw.role);
@@ -51,6 +53,7 @@ function usersQueryToFilters(query: ListUsersQuery): UsersListFilters {
 }
 
 export {
+  DEFAULT_USERS_QUERY,
   DEFAULT_USERS_LIST_FILTERS,
   normalizeUsersSearch,
   usersQueryToFilters,

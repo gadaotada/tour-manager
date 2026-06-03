@@ -1,7 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 
 import {
-  ROLES,
   createUserSchema,
   updateUserSchema,
   type CreateUserInput,
@@ -32,6 +31,7 @@ import { toast } from "@libs/toasts";
 
 import { useUserPermissions } from "../use-user-permissions";
 import { createUser, updateUser } from "../users.api";
+import { USER_FORM_FIELDS, getRoleOptions } from "./user-form.model";
 
 type UserFormProps = {
   defaultValues: CreateUserInput;
@@ -40,8 +40,6 @@ type UserFormProps = {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 };
-
-const USER_FORM_FIELDS = ["username", "display_name", "role", "is_enabled", "password"] as const;
 
 function UserForm({
   defaultValues,
@@ -158,14 +156,17 @@ function UserForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-              {roleOptions.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {t(`users.roles.${role}`)}
-                </SelectItem>
-              ))}
+                {roleOptions.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {t(`users.roles.${role}`)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <FormFieldError className="text-base text-destructive" errors={field.state.meta.errors} />
+            <FormFieldError
+              className="text-base text-destructive"
+              errors={field.state.meta.errors}
+            />
           </div>
         )}
       </form.Field>
@@ -197,12 +198,6 @@ function UserForm({
       </DialogFooter>
     </form>
   );
-}
-
-function getRoleOptions(canManageAdminUsers: boolean): Role[] {
-  return canManageAdminUsers
-    ? [ROLES.ADMIN, ROLES.MODERATOR, ROLES.EMPLOYEE]
-    : [ROLES.MODERATOR, ROLES.EMPLOYEE];
 }
 
 export { UserForm };

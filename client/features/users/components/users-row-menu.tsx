@@ -1,4 +1,4 @@
-import { PenIcon, PowerIcon, TrashIcon } from "lucide-react";
+import { EyeIcon, PenIcon, PowerIcon, TrashIcon } from "lucide-react";
 
 import type { ManagedUser } from "@tour-manager/shared";
 
@@ -14,6 +14,7 @@ type UsersRowMenuProps = {
   onDelete: (user: ManagedUser) => void;
   onEdit: (user: ManagedUser) => void;
   onToggleStatus: (user: ManagedUser) => void;
+  onView: (user: ManagedUser) => void;
   tableViewport: HTMLDivElement | null;
   user: ManagedUser;
 };
@@ -27,6 +28,7 @@ function UsersRowMenu({
   onDelete,
   onEdit,
   onToggleStatus,
+  onView,
   tableViewport,
   user,
 }: UsersRowMenuProps) {
@@ -39,6 +41,11 @@ function UsersRowMenu({
       onClose={onClose}
       tableViewport={tableViewport}
     >
+      <RowMenuButton onClick={() => onView(user)}>
+        <EyeIcon className="size-4" />
+        {t("users.actions.view")}
+      </RowMenuButton>
+
       {canUpdate ? (
         <>
           <RowMenuButton onClick={() => onEdit(user)}>

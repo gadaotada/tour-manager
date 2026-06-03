@@ -1,4 +1,4 @@
-import { ArrowDownIcon, ArrowUpIcon, PenIcon, PowerIcon, TrashIcon } from "lucide-react";
+import { PenIcon, PowerIcon, TrashIcon } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
 import {
@@ -13,9 +13,12 @@ import {
   ActiveStateBadge,
   AnchoredRowMenu,
   ConfirmDialog,
+  DataTable,
   RowMenuButton,
+  SortableColumnHeader,
   useConfirmAction,
   useRowActionMenu,
+  type DataTableColumnDef,
 } from "@components/data";
 import { useAuthUser } from "@core/stores";
 import type { TableColumnVisibilityColumn } from "@features/settings";
@@ -33,13 +36,6 @@ type HotelsTableProps = {
   onEdit: (hotel: Hotel) => void;
   onRefresh: () => void;
   onSort: (column: ListHotelsQuery["sort_by"]) => void;
-};
-
-type HotelColumn = {
-  className?: string;
-  id: ListHotelsQuery["sort_by"];
-  labelKey: MessageKey;
-  render: (hotel: Hotel) => React.ReactNode;
 };
 
 const HOTEL_COLUMN_LABEL_KEYS: Record<ListHotelsQuery["sort_by"], MessageKey> = {
@@ -84,24 +80,23 @@ function HotelsTable({ hiddenColumns = [], onEdit, onRefresh, onSort }: HotelsTa
   });
 
   const [pendingHotelId, setPendingHotelId] = useState<number | null>(null);
-  const hiddenColumnSet = new Set(hiddenColumns);
+  const hiddenColumnSet = useMemo(() => new Set(hiddenColumns), [hiddenColumns]);
   const columns = useMemo(
-    (): HotelColumn[] =>
+    (): DataTableColumnDef<Hotel>[] =>
       HOTEL_TABLE_COLUMN_IDS.filter((columnId) => !hiddenColumnSet.has(columnId)).map(
         (columnId) => ({
           id: columnId,
-          labelKey: HOTEL_COLUMN_LABEL_KEYS[columnId],
-          className:
-            columnId === "is_active"
-              ? "w-28"
-              : columnId === "stars"
-                ? "w-20"
-                : columnId === "created_at" || columnId === "updated_at"
-                  ? "w-44"
-                  : columnId === "address"
-                    ? "min-w-96"
-                  : undefined,
-          render: (hotel) => {
+          header: () => (
+            <SortableColumnHeader
+              active={sort?.sort_by === columnId}
+              dir={sort?.sort_dir ?? "ASC"}
+              label={t(HOTEL_COLUMN_LABEL_KEYS[columnId])}
+              onClick={() => onSort(columnId)}
+            />
+          ),
+          cell: ({ row }) => {
+            const hotel = row.original;
+
             switch (columnId) {
               case "name":
                 return <span className="block min-w-0 truncate font-medium">{hotel.name}</span>;
@@ -125,9 +120,24 @@ function HotelsTable({ hiddenColumns = [], onEdit, onRefresh, onSort }: HotelsTa
                 return null;
             }
           },
+          meta: {
+            className:
+              columnId === "is_active"
+                ? "w-28"
+                : columnId === "stars"
+                  ? "w-20"
+                  : columnId === "created_at" || columnId === "updated_at"
+                    ? "w-44"
+                    : columnId === "address"
+                      ? "min-w-96"
+                      : undefined,
+            cellClassName: "border-b px-4 py-3 align-middle whitespace-nowrap",
+            headerClassName:
+              "border-b px-4 py-2 text-sm font-medium whitespace-nowrap text-muted-foreground",
+          },
         }),
       ),
-    [hiddenColumnSet, locale, t],
+    [hiddenColumnSet, locale, onSort, sort?.sort_by, sort?.sort_dir, t],
   );
 
   async function handleStatusChange(hotel: Hotel) {
@@ -154,64 +164,24 @@ function HotelsTable({ hiddenColumns = [], onEdit, onRefresh, onSort }: HotelsTa
     <>
       <div className="overflow-hidden rounded-md border bg-card">
         <div ref={tableViewportRef} className="relative max-h-[65vh] min-h-64 overflow-auto">
-          <table className="w-full min-w-190 caption-bottom border-separate border-spacing-0 text-sm/relaxed">
-            <thead className="sticky top-0 z-10 bg-surface-muted text-left">
-              <tr className="border-b">
-                {columns.map((column) => (
-                  <th
-                    key={column.id}
-                    className={cn(
-                      "border-b px-4 py-2 text-sm font-medium whitespace-nowrap text-muted-foreground",
-                      column.className,
-                    )}
-                  >
-                    <button
-                      type="button"
-                      className={cn(
-                        "inline-flex items-center gap-1 transition-colors hover:text-foreground",
-                        sort?.sort_by === column.id && "text-foreground",
-                      )}
-                      onClick={() => onSort(column.id)}
-                    >
-                      {t(column.labelKey)}
-                      {sort?.sort_by === column.id ? (
-                        sort.sort_dir === "DESC" ? (
-                          <ArrowDownIcon className="size-3.5 shrink-0 opacity-70" />
-                        ) : (
-                          <ArrowUpIcon className="size-3.5 shrink-0 opacity-70" />
-                        )
-                      ) : null}
-                    </button>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {hotels.map((hotel) => (
-                <tr
-                  key={hotel.id}
-                  data-state={rowActions.selectedItem?.id === hotel.id ? "selected" : undefined}
-                  className={cn(
-                    "border-b transition-colors hover:bg-muted/30 data-[state=selected]:bg-primary/5 dark:data-[state=selected]:bg-primary/10",
-                    hasRowActions && "cursor-pointer",
-                  )}
-                  onClick={(event) => rowActions.openMenu(event, hotel)}
-                >
-                  {columns.map((column) => (
-                    <td
-                      key={`${hotel.id}-${column.id}`}
-                      className={cn(
-                        "border-b px-4 py-3 align-middle whitespace-nowrap",
-                        column.className,
-                      )}
-                    >
-                      {column.render(hotel)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable
+            columns={columns}
+            data={hotels}
+            getRowId={(hotel) => String(hotel.id)}
+            headerRowClassName="border-b"
+            rowClassName={() =>
+              cn(
+                "border-b transition-colors hover:bg-muted/30 data-[state=selected]:bg-primary/5 dark:data-[state=selected]:bg-primary/10",
+                hasRowActions && "cursor-pointer",
+              )
+            }
+            rowState={(hotel) =>
+              rowActions.selectedItem?.id === hotel.id ? "selected" : undefined
+            }
+            tableClassName="w-full min-w-190 caption-bottom border-separate border-spacing-0 text-sm/relaxed"
+            tableHeaderClassName="sticky top-0 z-10 bg-surface-muted text-left"
+            onRowClick={(event, hotel) => rowActions.openMenu(event, hotel)}
+          />
         </div>
       </div>
 

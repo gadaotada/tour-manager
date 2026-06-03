@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import { schemaBoolean, schemaInvalidType, schemaMessage } from "../../libs/validation";
 import { createTranslatedSortedListQuerySchema } from "../common";
+import {
+  PERMISSION_EFFECTS,
+  isPermission,
+} from "../../types/users/users.permissions";
 import { ROLES } from "../../types/users/users.roles";
 
 export const USER_SORT_BY_COLS = [
@@ -53,6 +57,18 @@ export const updateUserSchema = userCoreSchema.extend({
 
 export const updateUserStatusSchema = z.object({
   is_enabled: z.boolean(schemaBoolean("users.validation.is_enabled.invalid")),
+});
+
+export const updateUserPermissionsSchema = z.object({
+  permission_overrides: z.array(
+    z.object({
+      permission: z
+        .string()
+        .refine(isPermission, schemaMessage("users.validation.permissions.permission.invalid")),
+      effect: z
+        .enum([PERMISSION_EFFECTS.ALLOW, PERMISSION_EFFECTS.DENY], schemaMessage("users.validation.permissions.effect.invalid")),
+    }),
+  ),
 });
 
 export const userIdParamsSchema = z.object({

@@ -51,6 +51,16 @@ function UsersPage() {
     setFormOpen(true);
   }
 
+  function openUserDetail(targetUser: ManagedUser) {
+    navigate({
+      to: "/users/$userId",
+      params: { userId: targetUser.id },
+      search: {},
+    }).catch((error: unknown) => {
+      console.error("Failed to open user detail:", error);
+    });
+  }
+
   function updateSearch(next: Partial<ListUsersQuery>) {
     const nextQuery = normalizeUsersSearch({ ...query, ...next });
 
@@ -159,6 +169,7 @@ function UsersPage() {
           onEdit={openEditDialog}
           onRefresh={refreshUsers}
           onSort={setSort}
+          onView={openUserDetail}
         />
       </ListPageSection>
 

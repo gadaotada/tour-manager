@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import { z } from "zod";
+import type { z } from "zod";
 import type { ZodSchema, ZodTypeAny } from "zod";
 
 export type RequestSchemas = {
@@ -24,7 +24,7 @@ function validateRequest<TSchemas extends RequestSchemas>(
         body: schemas.body?.parse(req.body),
         params: schemas.params?.parse(req.params),
         query: schemas.query?.parse(req.query),
-    } as ValidatedRequest<TSchemas>;
+    };
 }
 
 export { validateRequest };

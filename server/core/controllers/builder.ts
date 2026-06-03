@@ -28,7 +28,7 @@ function createAppController<Extra = object>(basePath: string): AppControllerBui
                 return builder;
             },
             use(middleware: RouteMiddleware) {
-                routeMiddlewares.push(middleware as RoutePipelineStep);
+                routeMiddlewares.push(middleware);
                 return builder;
             },
             handle(handler: RouteHandler) {
@@ -36,7 +36,7 @@ function createAppController<Extra = object>(basePath: string): AppControllerBui
                     method,
                     path,
                     schemas: routeSchemas,
-                    handlers: [...routeMiddlewares, handler as RoutePipelineStep],
+                    handlers: [...routeMiddlewares, handler],
                 });
 
                 return controller;

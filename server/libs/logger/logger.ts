@@ -112,7 +112,7 @@ class ServerLogger implements Logger {
   ): void {
     if (!this.state.reporter) return;
 
-    this.state.reporter.captureError({
+    void this.state.reporter.captureError({
       level,
       message,
       meta,

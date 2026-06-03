@@ -3,6 +3,7 @@ import {
   listUsersQuerySchema,
   PERMISSIONS,
   updateUserSchema,
+  updateUserPermissionsSchema,
   updateUserStatusSchema,
   userIdParamsSchema,
 } from "@tour-manager/shared";
@@ -10,6 +11,8 @@ import {
 import { createAppController } from "@core/controllers";
 import { requireAnyPermission, requireAuth } from "@features/auth";
 
+import { usersDetailsService } from "./users.details.service";
+import { usersPermissionsService } from "./users.permissions.service";
 import { usersService } from "./users.service";
 
 const usersController = createAppController("/users")
@@ -22,6 +25,18 @@ const usersController = createAppController("/users")
       const users = await usersService.listUsers(ctx.user, ctx.parsed.query);
 
       ctx.reply.success({ data: users });
+    })
+
+  .GET("/detail/:id")
+    .schemas({ params: userIdParamsSchema })
+    .use(requireAnyPermission([PERMISSIONS.USERS.READ_ANY, PERMISSIONS.USERS.READ_NON_ADMIN]))
+    .handle(async (ctx) => {
+      const user = await usersDetailsService.getUserDetail(
+        ctx.user,
+        ctx.parsed.params.id,
+      );
+
+      ctx.reply.success({ data: user });
     })
 
   .POST("/create")
@@ -62,6 +77,20 @@ const usersController = createAppController("/users")
       );
 
       ctx.reply.success({ data: user });
+    })
+
+  .PUT("/update-permissions/:id")
+    .schemas({ body: updateUserPermissionsSchema, params: userIdParamsSchema })
+    .use(requireAnyPermission([PERMISSIONS.USERS.UPDATE_ANY, PERMISSIONS.USERS.UPDATE_NON_ADMIN]))
+    .handle(async (ctx) => {
+      const permission_overrides = await usersPermissionsService.updateUserPermissions(
+        ctx.user,
+        ctx.parsed.params.id,
+        ctx.parsed.body,
+        ctx.origin_socket_id,
+      );
+
+      ctx.reply.success({ data: permission_overrides });
     })
 
   .DELETE("/delete/:id")

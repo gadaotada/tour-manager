@@ -1,8 +1,11 @@
 export { ActiveStateBadge } from "./active-state-badge";
 export { AnchoredRowMenu, RowMenuButton } from "./anchored-row-menu";
 export { ConfirmDialog } from "./confirm-dialog";
+export { DataTable, type DataTableColumnDef } from "./data-table";
+export { DetailItem } from "./detail-item";
 export { ListPageSection } from "./list-page-section";
 export { SearchInput } from "./search-input";
+export { SortableColumnHeader } from "./sortable-column-header";
 export { StarsSelect, StarsValue } from "./stars-select";
 export { useConfirmAction } from "./use-confirm-action";
 export { useRowActionMenu } from "./use-row-action-menu";
