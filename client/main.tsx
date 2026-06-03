@@ -4,11 +4,9 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 
 import { bootstrapLocaleHeaderSync } from "@libs/i18n";
 import { initThemeStore } from "@libs/theme";
+import { bootstrapClientVersion } from "@libs/versioning";
 import { routeTree } from "./routeTree.gen";
 import "./styles/app.css";
-
-initThemeStore();
-bootstrapLocaleHeaderSync();
 
 const router = createRouter({ routeTree });
 
@@ -24,8 +22,15 @@ if (!rootElement) {
   throw new Error("Root element not found.");
 }
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-);
+initThemeStore();
+bootstrapLocaleHeaderSync();
+
+bootstrapClientVersion()
+  .catch(() => undefined)
+  .finally(() => {
+    createRoot(rootElement).render(
+      <StrictMode>
+        <RouterProvider router={router} />
+      </StrictMode>,
+    );
+  });

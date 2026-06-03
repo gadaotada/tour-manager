@@ -9,10 +9,18 @@
     "server",
     "shared"
   ],
-  "scripts": {
+    "scripts": {
+    "generate:client-version": "node scripts/generate-client-version.mjs",
+    "ensure:client-version": "node scripts/generate-client-version.mjs --ensure",
+    "predev": "npm run ensure:client-version",
+    "predev:client": "npm run ensure:client-version",
+    "predev:server": "npm run ensure:client-version",
+    "prebuild": "npm run generate:client-version",
+    "prebuild:client": "npm run generate:client-version",
+    "prebuild:server": "npm run generate:client-version",
     "dev": "node --env-file=.env.local ./node_modules/.bin/turbo dev --env-mode=loose",
-    "dev:client": "npm run dev -w client",
-    "dev:server": "npm run dev -w server",
+    "dev:client": "node --env-file=.env.local ./node_modules/.bin/turbo dev --filter=client --env-mode=loose",
+    "dev:server": "node --env-file=.env.local ./node_modules/.bin/turbo dev --filter=server --env-mode=loose",
     "build": "turbo build",
     "build:client": "turbo build --filter=client",
     "build:server": "turbo build --filter=server",

@@ -5,8 +5,11 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "**/out/**",
       "**/coverage/**",
       "**/node_modules/**",
+      "eslint.config.js",
+      "scripts/**",
       "client/routeTree.gen.ts"
     ]
   },

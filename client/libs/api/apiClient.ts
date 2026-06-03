@@ -1,9 +1,16 @@
-import type { ApiResponse } from "@tour-manager/shared";
-import { HTTP_HEADERS } from "@tour-manager/shared";
+import type {
+  ApiResponse,
+  ClientVersionMismatchDetails,
+} from "@tour-manager/shared";
+import { API_ERROR_CODES, HTTP_HEADERS } from "@tour-manager/shared";
 
 import { resolveRequestLocale } from "@libs/i18n/request-locale";
 import { logger } from "@libs/logger";
 import { getRealtimeSocketId } from "@libs/realtime";
+import {
+  getClientBuildId,
+  handleClientVersionMismatch,
+} from "@libs/versioning";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -24,7 +31,7 @@ type ApiErrorPayload = {
 };
 
 type RequestOptions<T> = {
-  body?: unknown | undefined;
+  body?: unknown;
   config?: ApiRequestConfig<T> | undefined;
   kind: "json" | "text";
   method: HttpMethod;
@@ -82,7 +89,9 @@ async function executeRequest<T>({
   const isJson = kind === "json";
   const url = createRequestUrl(path, config?.params);
   const headers = createRequestHeaders(config?.headers, isJson, body);
-  const { fallbackData: _fallbackData, params: _params, ...requestConfig } = config ?? {};
+  const requestConfig = { ...config };
+  delete requestConfig.fallbackData;
+  delete requestConfig.params;
 
   let response: Response;
 
@@ -151,6 +160,7 @@ function createRequestHeaders(
     isJson ? "application/json" : "text/plain, text/html, */*",
   );
   requestHeaders.set(HTTP_HEADERS.APP_LANG, resolveRequestLocale());
+  requestHeaders.set(HTTP_HEADERS.CLIENT_BUILD_ID, getClientBuildId());
 
   const socketId = getRealtimeSocketId();
   if (socketId && !requestHeaders.has(HTTP_HEADERS.SOCKET_ID)) {
@@ -198,6 +208,14 @@ function parseJsonResponse<T>(
   }
 
   if (!data.ok) {
+    if (data.error.code === API_ERROR_CODES.CLIENT_VERSION_MISMATCH) {
+      handleClientVersionMismatch(
+        isClientVersionMismatchDetails(data.error.details)
+          ? data.error.details
+          : undefined,
+      );
+    }
+
     const error = new ApiClientError(data.error, status);
 
     apiLogger.warn(
@@ -272,6 +290,20 @@ function isApiResponse<T>(value: unknown): value is ApiResponse<T> {
   }
 
   return false;
+}
+
+function isClientVersionMismatchDetails(
+  value: unknown,
+): value is ClientVersionMismatchDetails {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate = value as Partial<ClientVersionMismatchDetails>;
+
+  return (
+    typeof candidate.expected_build_id === "string" &&
+    (candidate.received_build_id === null ||
+      typeof candidate.received_build_id === "string")
+  );
 }
 
 function setHttpClientDefaultHeader(name: string, value: string): void {

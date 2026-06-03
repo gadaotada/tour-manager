@@ -80,9 +80,11 @@ export {
 } from "./schemas/hotels";
 
 export {
+    API_ERROR_CODES,
     type ApiFailure,
     type ApiResponse,
     type ApiSuccess,
+    type ClientVersionMismatchDetails,
 } from "./types/api";
 
 export { type PaginatedResult } from "./types/pagination";

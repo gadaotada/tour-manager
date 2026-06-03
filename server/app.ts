@@ -8,6 +8,7 @@ import helmet from "helmet";
 
 import { registerControllers } from "@core/controllers";
 import { errorMiddleware, requestContextMiddleware } from "@core/http";
+import { clientVersionMiddleware, loadClientVersion } from "@core/versioning";
 import { authController } from "./features/auth";
 import { healthController } from "./features/health/health.controller";
 import { hotelsController } from "./features/hotels/hotels.controller";
@@ -20,6 +21,14 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function createApp(): Express {
   const app = express();
+  const clientDist = path.resolve(dirname, "../client");
+  const clientPublic = path.resolve(dirname, "../client/public");
+  const clientVersion = loadClientVersion({
+    clientDistPath: clientDist,
+    clientPublicPath: clientPublic,
+    envBuildId: env.clientBuildId,
+    isProduction: env.nodeEnv === "production",
+  });
 
   app.use(helmet());
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
@@ -27,6 +36,7 @@ export function createApp(): Express {
   app.use(cookieParser());
   app.use(sessionMiddleware);
   app.use(requestContextMiddleware(logger));
+  app.use(clientVersionMiddleware({ expectedBuildId: clientVersion.build_id }));
 
   registerControllers(
     app,
@@ -40,9 +50,20 @@ export function createApp(): Express {
   );
 
   if (env.nodeEnv === "production") {
-    const clientDist = path.resolve(dirname, "../client");
-    app.use(express.static(clientDist));
+    app.use(
+      express.static(clientDist, {
+        setHeaders(res, filePath) {
+          if (filePath.endsWith("index.html") || filePath.endsWith("client-version.json")) {
+            res.setHeader("cache-control", "no-store");
+            return;
+          }
+
+          res.setHeader("cache-control", "public, max-age=31536000, immutable");
+        },
+      }),
+    );
     app.get("*", (_req, res) => {
+      res.setHeader("cache-control", "no-store");
       res.sendFile(path.join(clientDist, "index.html"));
     });
   }
