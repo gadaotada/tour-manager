@@ -1,5 +1,5 @@
 import type { SortDir } from "@tour-manager/shared";
-import { ExecuteValues } from "mysql2";
+import type { ExecuteValues } from "mysql2";
 import { normalizePagination } from "./paginations";
 
 type BaseUpdateFields<Id = number> = {
@@ -35,6 +35,7 @@ function buildGeneralUpdateSql<T extends BaseUpdateFields>(fields: T, tableName:
 
 type PaginationFilter = {
     column: string;
+    operator?: "=" | "<>";
     value: string | number | boolean;
 };
 
@@ -73,7 +74,7 @@ function buildGeneralPaginatedSelectSql(tableName: string, cols: readonly string
     }
 
     for (const filter of paginationConfig.filters ?? []) {
-        whereClauses.push(`${filter.column} = ?`);
+        whereClauses.push(`${filter.column} ${filter.operator ?? "="} ?`);
         whereValues.push(filter.value);
     }
 

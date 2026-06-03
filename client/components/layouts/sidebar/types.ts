@@ -1,9 +1,11 @@
 import type { MessageKey } from "@libs/i18n";
 import type { LucideIcon } from "lucide-react";
+import type { Permission } from "@tour-manager/shared";
 
 type NavItem = {
   icon: LucideIcon;
   labelKey: MessageKey;
+  permission?: Permission;
   to: string;
 };
 

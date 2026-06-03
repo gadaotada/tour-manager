@@ -38,6 +38,11 @@ type SocketMeta = {
   user: ClientUser;
 };
 
+type EmitToScopeOptions = {
+  exclude_socket_id?: string;
+  filter?: (user: ClientUser) => boolean;
+};
+
 const GLOBAL_SCOPE: RealtimeScope = "global";
 
 class RealtimeGateway {
@@ -50,7 +55,7 @@ class RealtimeGateway {
   private readonly socketsByScope = new Map<RealtimeScope, Set<WebSocket>>();
   private wss: WebSocketServer | null = null;
 
-  emitToScope(scope: RealtimeScope, event: unknown, options?: { exclude_socket_id: string | undefined }): void {
+  emitToScope(scope: RealtimeScope, event: unknown, options?: EmitToScopeOptions): void {
     const parsedScope = realtimeScopeSchema.safeParse(scope);
     if (!parsedScope.success) {
       return;
@@ -62,11 +67,18 @@ class RealtimeGateway {
     }
 
     for (const socket of sockets) {
-      if (options?.exclude_socket_id && options.exclude_socket_id !== undefined) {
-        const meta = this.metaBySocket.get(socket);
-        if (meta?.socket_id === options.exclude_socket_id) {
-          continue;
-        }
+      const meta = this.metaBySocket.get(socket);
+
+      if (!meta) {
+        continue;
+      }
+
+      if (options?.exclude_socket_id && meta.socket_id === options.exclude_socket_id) {
+        continue;
+      }
+
+      if (options?.filter && !options.filter(meta.user)) {
+        continue;
       }
 
       this.sendJson(socket, event);

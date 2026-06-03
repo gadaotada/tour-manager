@@ -1,5 +1,7 @@
 import { t, type MessageKey } from "@libs/i18n";
 import { cn } from "@libs/utils";
+import { useAuthUser } from "@core/stores";
+import { hasPermission, type Permission } from "@tour-manager/shared";
 
 import { mainNavItems, operationsNavItems } from "./nav-items";
 import { SidebarButton } from "./sidebar-button";
@@ -10,6 +12,8 @@ type SidebarNavProps = {
 };
 
 function SidebarNav({ isExpanded }: SidebarNavProps) {
+  const user = useAuthUser();
+
   return (
     <nav
       className={cn(
@@ -19,16 +23,23 @@ function SidebarNav({ isExpanded }: SidebarNavProps) {
     >
       <SidebarGroup
         isExpanded={isExpanded}
-        items={mainNavItems}
+        items={filterNavItems(mainNavItems, user?.permissions)}
         labelKey="dashboard.sidebar.main"
       />
       <SidebarGroup
         isExpanded={isExpanded}
-        items={operationsNavItems}
+        items={filterNavItems(operationsNavItems, user?.permissions)}
         labelKey="dashboard.sidebar.operations"
       />
     </nav>
   );
+}
+
+function filterNavItems(
+  items: NavItem[],
+  permissions: readonly Permission[] | undefined,
+): NavItem[] {
+  return items.filter((item) => !item.permission || hasPermission(permissions, item.permission));
 }
 
 type SidebarGroupProps = {

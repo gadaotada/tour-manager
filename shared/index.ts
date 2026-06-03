@@ -90,6 +90,15 @@ export {
 export { type PaginatedResult } from "./types/pagination";
 
 export {
+    USER_SORT_BY_COLS,
+    createUserSchema,
+    listUsersQuerySchema,
+    updateUserSchema,
+    updateUserStatusSchema,
+    userIdParamsSchema,
+} from "./schemas/users";
+
+export {
     loginSchema,
     ALL_PERMISSIONS,
     PERMISSIONS,
@@ -108,10 +117,14 @@ export {
     normalizeUserSettings,
     TABLE_PAGE_SIZE_OPTIONS,
     UI_TABLE_NAMES,
+    USER_REALTIME_EVENTS,
     updateUserSettingsSchema,
     type BaseUser,
     type ClientUser,
+    type CreateUserInput,
+    type ListUsersQuery,
     type LoginInput,
+    type ManagedUser,
     type Permission,
     type PermissionEffect,
     type PermissionOverride,
@@ -121,9 +134,16 @@ export {
     type TableSettings,
     type UITableName,
     type UpdateUserSettingsInput,
+    type UpdateUserInput,
+    type UpdateUserStatusInput,
+    type UserIdParams,
     type UserLanguage,
     type UserPermissionOverride,
+    type UserRealtimeEvent,
+    type UserRealtimePayload,
     type UserSettings,
+    type UsersListQuery,
+    type UsersListResult,
 } from "./types/users";
 
 export {

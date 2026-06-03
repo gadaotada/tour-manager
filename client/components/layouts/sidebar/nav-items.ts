@@ -8,6 +8,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import { PERMISSIONS } from "@tour-manager/shared";
 
 import { APP_PATHS } from "@libs/routes/app-paths";
 
@@ -42,6 +43,7 @@ const mainNavItems: NavItem[] = [
   {
     labelKey: "dashboard.nav.users",
     icon: Users,
+    permission: PERMISSIONS.USERS.READ_NON_ADMIN,
     to: APP_PATHS.users,
   },
 ];

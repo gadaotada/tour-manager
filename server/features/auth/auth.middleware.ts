@@ -23,6 +23,16 @@ function requirePermission(permission: Permission): RouteMiddleware<object, { us
     };
 }
 
+function requireAnyPermission(permissions: readonly Permission[]): RouteMiddleware<object, { user: ClientUser }> {
+    return (ctx) => {
+        if (!permissions.some((permission) => hasPermission(ctx.user.permissions, permission))) {
+            throw forbiddenError();
+        }
+
+        return ctx.proceed();
+    };
+}
+
 async function getSessionUser(req: Request): Promise<ClientUser> {
     const user_id = req.session.user_id;
 
@@ -40,4 +50,4 @@ async function getSessionUser(req: Request): Promise<ClientUser> {
     return user;
 }
 
-export { requireAuth, requirePermission };
+export { requireAnyPermission, requireAuth, requirePermission };

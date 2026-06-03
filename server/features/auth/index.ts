@@ -1,2 +1,2 @@
 export { authController } from "./auth.controller";
-export { requireAuth, requirePermission } from "./auth.middleware";
+export { requireAnyPermission, requireAuth, requirePermission } from "./auth.middleware";
