@@ -51,8 +51,8 @@ function UserForm({
   onSuccess,
 }: UserFormProps) {
   const t = useT();
-  const { canManageAdmins } = useUserPermissions();
-  const roleOptions = getRoleOptions(canManageAdmins);
+  const { canCreateAny, canUpdateAny } = useUserPermissions();
+  const roleOptions = getRoleOptions(isEdit ? canUpdateAny : canCreateAny);
   const form = useForm({
     defaultValues,
     validators: {
@@ -199,10 +199,10 @@ function UserForm({
   );
 }
 
-function getRoleOptions(canManageAdmins: boolean): Role[] {
-  return canManageAdmins
+function getRoleOptions(canManageAdminUsers: boolean): Role[] {
+  return canManageAdminUsers
     ? [ROLES.ADMIN, ROLES.MODERATOR, ROLES.EMPLOYEE]
-    : [ROLES.EMPLOYEE];
+    : [ROLES.MODERATOR, ROLES.EMPLOYEE];
 }
 
 export { UserForm };

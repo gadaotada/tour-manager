@@ -43,7 +43,7 @@ const mainNavItems: NavItem[] = [
   {
     labelKey: "dashboard.nav.users",
     icon: Users,
-    permission: PERMISSIONS.USERS.READ_NON_ADMIN,
+    anyPermissions: [PERMISSIONS.USERS.READ_ANY, PERMISSIONS.USERS.READ_NON_ADMIN],
     to: APP_PATHS.users,
   },
 ];

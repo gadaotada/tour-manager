@@ -28,7 +28,7 @@ function UsersPage() {
   const isLoading = useRouterState({
     select: (state) => state.status === "pending",
   });
-  const { canCreateEmployee } = useUserPermissions();
+  const { canCreateUser } = useUserPermissions();
   const filters = usersQueryToFilters(query);
   const showInitialLoading = isLoading && !result;
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
@@ -134,7 +134,7 @@ function UsersPage() {
         toolbar={
           <UsersToolbar
             filters={filters}
-            canCreate={canCreateEmployee}
+            canCreate={canCreateUser}
             onCreate={openCreateDialog}
             onIsEnabledChange={setIsEnabled}
             onReset={resetFilters}

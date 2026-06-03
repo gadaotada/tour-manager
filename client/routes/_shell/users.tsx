@@ -15,7 +15,10 @@ export const Route = createFileRoute("/_shell/users")({
   beforeLoad: () => {
     const user = authStore.getState().user;
 
-    if (!hasPermission(user?.permissions, PERMISSIONS.USERS.READ_NON_ADMIN)) {
+    if (
+      !hasPermission(user?.permissions, PERMISSIONS.USERS.READ_ANY) &&
+      !hasPermission(user?.permissions, PERMISSIONS.USERS.READ_NON_ADMIN)
+    ) {
       // TanStack Router redirects are intentionally thrown.
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({ to: APP_PATHS.dashboard });

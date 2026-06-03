@@ -37,12 +37,16 @@ function UsersToolbar({
   onSearchChange,
 }: UsersToolbarProps) {
   const t = useT();
-  const { canReadAny } = useUserPermissions();
+  const { canReadAdminUsers, canReadNonAdmin } = useUserPermissions();
   const roleOptions: Array<{ label: string; value: UsersListFilters["role"] }> = [
     { value: "all", label: t("users.filters.allRoles") },
-    ...(canReadAny ? [{ value: ROLES.ADMIN, label: t("users.roles.ADMIN") }] : []),
-    ...(canReadAny ? [{ value: ROLES.MODERATOR, label: t("users.roles.MODERATOR") }] : []),
-    { value: ROLES.EMPLOYEE, label: t("users.roles.EMPLOYEE") },
+    ...(canReadAdminUsers ? [{ value: ROLES.ADMIN, label: t("users.roles.ADMIN") }] : []),
+    ...(canReadAdminUsers || canReadNonAdmin
+      ? [{ value: ROLES.MODERATOR, label: t("users.roles.MODERATOR") }]
+      : []),
+    ...(canReadAdminUsers || canReadNonAdmin
+      ? [{ value: ROLES.EMPLOYEE, label: t("users.roles.EMPLOYEE") }]
+      : []),
   ];
 
   return (

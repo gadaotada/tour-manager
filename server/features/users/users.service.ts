@@ -49,7 +49,9 @@ async function listUsers(
   if (!includeAdmins && !canReadNonAdmin) {
     throw forbiddenError();
   }
-  const sanitizedQuery = includeAdmins ? query : { ...query, role: ROLES.EMPLOYEE };
+
+  const sanitizedQuery =
+    includeAdmins || query.role !== ROLES.ADMIN ? query : { ...query, role: undefined };
   const { rows, total } = await usersRepository.listUsers({
     includeAdmins,
     queryParams: sanitizedQuery,
@@ -190,7 +192,7 @@ function assertCanCreateRole(actor: ClientUser, role: Role): void {
   if (hasPermission(actor.permissions, PERMISSIONS.USERS.CREATE_ANY)) return;
 
   if (
-    role === ROLES.EMPLOYEE &&
+    isNonAdminRole(role) &&
     hasPermission(actor.permissions, PERMISSIONS.USERS.CREATE_NON_ADMIN)
   ) {
     return;
@@ -203,7 +205,7 @@ function assertCanUpdateRole(actor: ClientUser, role: Role): void {
   if (hasPermission(actor.permissions, PERMISSIONS.USERS.UPDATE_ANY)) return;
 
   if (
-    role === ROLES.EMPLOYEE &&
+    isNonAdminRole(role) &&
     hasPermission(actor.permissions, PERMISSIONS.USERS.UPDATE_NON_ADMIN)
   ) {
     return;
@@ -216,7 +218,7 @@ function assertCanDeleteRole(actor: ClientUser, role: Role): void {
   if (hasPermission(actor.permissions, PERMISSIONS.USERS.DELETE_ANY)) return;
 
   if (
-    role === ROLES.EMPLOYEE &&
+    isNonAdminRole(role) &&
     hasPermission(actor.permissions, PERMISSIONS.USERS.DELETE_NON_ADMIN)
   ) {
     return;
@@ -230,10 +232,14 @@ function canViewUserRole(viewer: ClientUser, role: Role): boolean {
     return true;
   }
 
-  return role === ROLES.EMPLOYEE && hasPermission(
+  return isNonAdminRole(role) && hasPermission(
     viewer.permissions,
     PERMISSIONS.USERS.READ_NON_ADMIN,
   );
+}
+
+function isNonAdminRole(role: Role): boolean {
+  return role !== ROLES.ADMIN;
 }
 
 const usersService = {

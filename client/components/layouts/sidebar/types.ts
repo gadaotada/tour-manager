@@ -5,6 +5,7 @@ import type { Permission } from "@tour-manager/shared";
 type NavItem = {
   icon: LucideIcon;
   labelKey: MessageKey;
+  anyPermissions?: readonly Permission[];
   permission?: Permission;
   to: string;
 };

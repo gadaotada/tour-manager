@@ -39,7 +39,13 @@ function filterNavItems(
   items: NavItem[],
   permissions: readonly Permission[] | undefined,
 ): NavItem[] {
-  return items.filter((item) => !item.permission || hasPermission(permissions, item.permission));
+  return items.filter((item) => {
+    if (item.anyPermissions) {
+      return item.anyPermissions.some((permission) => hasPermission(permissions, permission));
+    }
+
+    return !item.permission || hasPermission(permissions, item.permission);
+  });
 }
 
 type SidebarGroupProps = {
