@@ -1,11 +1,18 @@
 import {
   isPermission,
   isPermissionEffect,
+  isRole,
   type PermissionOverride,
+  type Role,
   type UserPermissionOverride,
 } from "@tour-manager/shared";
 
-import { DbError, query, transaction } from "@libs/db";
+import {
+  DB_ERROR_CODES,
+  DB_ERROR_MESSAGE_KEYS,
+  DbError,
+  transaction,
+} from "@libs/db";
 
 type PermissionOverrideRow = {
   effect: string;
@@ -13,38 +20,44 @@ type PermissionOverrideRow = {
   user_id: string;
 };
 
-async function listUserPermissionOverrides(userId: string): Promise<UserPermissionOverride[]> {
-  return query(async (qe) => {
-    const rows = await qe.read<PermissionOverrideRow>(
+type UserRoleRow = {
+  id: string;
+  role: string;
+};
+
+type ReplaceUserPermissionOverridesResult = {
+  permission_overrides: UserPermissionOverride[];
+  role: Role;
+};
+
+async function replaceUserPermissionOverridesForTarget(
+  userId: string,
+  overrides: readonly PermissionOverride[],
+  assertCanReplace: (role: Role) => void,
+): Promise<ReplaceUserPermissionOverridesResult | null> {
+  return transaction(async (qe) => {
+    const userRows = await qe.read<UserRoleRow>(
       "execute",
       `
-        SELECT user_id, permission, effect
-        FROM user_permission_overrides
-        WHERE user_id = ?
-        ORDER BY permission ASC
+        SELECT id, role
+        FROM users
+        WHERE id = ?
+        LIMIT 1
       `,
       [userId],
     );
+    const user = userRows[0];
 
-    return rows.flatMap((row) => {
-      if (!isPermission(row.permission) || !isPermissionEffect(row.effect)) {
-        return [];
-      }
+    if (!user) {
+      return null;
+    }
 
-      return [{
-        user_id: row.user_id,
-        permission: row.permission,
-        effect: row.effect,
-      }];
-    });
-  });
-}
+    if (!isRole(user.role)) {
+      throw createInvalidRoleError();
+    }
 
-async function replaceUserPermissionOverrides(
-  userId: string,
-  overrides: readonly PermissionOverride[],
-): Promise<UserPermissionOverride[]> {
-  return transaction(async (qe) => {
+    assertCanReplace(user.role);
+
     const deleteMutation = await qe.mutate(
       "execute",
       "DELETE FROM user_permission_overrides WHERE user_id = ?",
@@ -73,17 +86,45 @@ async function replaceUserPermissionOverrides(
       if (!insertMutation.ok) throw new DbError(insertMutation.error);
     }
 
-    return overrides.map((override) => ({
-      user_id: userId,
-      permission: override.permission,
-      effect: override.effect,
-    }));
+    return {
+      role: user.role,
+      permission_overrides: toUserPermissionOverrides(
+        overrides.map((override) => ({
+          user_id: userId,
+          permission: override.permission,
+          effect: override.effect,
+        })),
+      ),
+    };
+  });
+}
+
+function toUserPermissionOverrides(rows: PermissionOverrideRow[]): UserPermissionOverride[] {
+  return rows.flatMap((row) => {
+    if (!isPermission(row.permission) || !isPermissionEffect(row.effect)) {
+      return [];
+    }
+
+    return [{
+      user_id: row.user_id,
+      permission: row.permission,
+      effect: row.effect,
+    }];
+  });
+}
+
+function createInvalidRoleError(): DbError {
+  return new DbError({
+    statusCode: 500,
+    code: DB_ERROR_CODES.GENERAL_DB_ERROR,
+    messageKey: DB_ERROR_MESSAGE_KEYS.GENERAL_DB_ERROR,
+    safeMessage: "Database operation failed.",
+    cause: null,
   });
 }
 
 const usersPermissionsRepository = {
-  listUserPermissionOverrides,
-  replaceUserPermissionOverrides,
+  replaceUserPermissionOverridesForTarget,
 };
 
 export { usersPermissionsRepository };

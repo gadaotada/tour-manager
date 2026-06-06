@@ -1,12 +1,36 @@
-import { DB_ERROR_CODES, DB_ERROR_MESSAGE_KEYS, DbError, query } from "@libs/db";
-import { normalizeUserSettings, type UserSettings } from "@tour-manager/shared";
+import { DB_ERROR_CODES, DB_ERROR_MESSAGE_KEYS, DbError, query, transaction } from "@libs/db";
+import {
+    normalizeUserSettings,
+    type UpdateUserSettingsInput,
+    type UserSettings,
+} from "@tour-manager/shared";
 
 type UserSettingsRow = {
     settings: string | null;
 };
 
-async function updateUserSettings(userId: string, settings: UserSettings): Promise<void> {
-    return query(async (qe) => {
+async function patchUserSettings(
+    userId: string,
+    input: UpdateUserSettingsInput,
+): Promise<UserSettings> {
+    return transaction(async (qe) => {
+        const rows = await qe.read<UserSettingsRow>(
+            "execute",
+            `
+            SELECT settings
+            FROM users
+            WHERE id = ?
+            LIMIT 1
+            `,
+            [userId],
+        );
+        const row = rows[0];
+
+        if (!row) {
+            throwUserSettingsNotFound();
+        }
+
+        const nextSettings = mergeUserSettingsPatch(parseUserSettings(row.settings), input);
         const mutation = await qe.mutate(
             "execute",
             `
@@ -14,7 +38,7 @@ async function updateUserSettings(userId: string, settings: UserSettings): Promi
             SET settings = ?
             WHERE id = ?
             `,
-            [JSON.stringify(settings), userId],
+            [JSON.stringify(nextSettings), userId],
         );
 
         if (!mutation.ok) throw new DbError(mutation.error);
@@ -22,6 +46,8 @@ async function updateUserSettings(userId: string, settings: UserSettings): Promi
         if (mutation.result.affectedRows === 0) {
             throwUserSettingsNotFound();
         }
+
+        return nextSettings;
     });
 }
 
@@ -79,6 +105,32 @@ function parseUserSettings(settings: string | null): UserSettings {
     }
 }
 
+function mergeUserSettingsPatch(
+    currentSettings: UserSettings,
+    patch: UpdateUserSettingsInput,
+): UserSettings {
+    const table_settings = { ...currentSettings.table_settings };
+
+    for (const [tableName, tablePatch] of Object.entries(patch.table_settings ?? {})) {
+        if (!tablePatch) {
+            continue;
+        }
+
+        const typedTableName = tableName as keyof UserSettings["table_settings"];
+
+        table_settings[typedTableName] = {
+            ...table_settings[typedTableName],
+            ...tablePatch,
+        };
+    }
+
+    return normalizeUserSettings({
+        ...currentSettings,
+        ...patch,
+        table_settings,
+    });
+}
+
 function throwUserSettingsNotFound(): never {
     throw new DbError({
         statusCode: 404,
@@ -90,8 +142,8 @@ function throwUserSettingsNotFound(): never {
 }
 
 const settingsUserRepository = {
-    updateUserSettings,
     getUserSettings,
+    patchUserSettings,
     deleteUserSettings,
 };
 

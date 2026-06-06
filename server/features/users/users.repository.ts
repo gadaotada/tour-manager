@@ -1,10 +1,15 @@
 import {
   ROLES,
   USER_SORT_BY_COLS,
+  isPermission,
+  isPermissionEffect,
   type CreateUserInput,
   type ListUsersQuery,
   type ManagedUser,
+  type Role,
   type UpdateUserInput,
+  type UserDetail,
+  type UserPermissionOverride,
 } from "@tour-manager/shared";
 
 import {
@@ -21,6 +26,12 @@ type UserRow = Omit<ManagedUser, "is_enabled"> & {
   is_enabled: number | boolean;
 };
 
+type PermissionOverrideRow = {
+  effect: string;
+  permission: string;
+  user_id: string;
+};
+
 type CreateUserRecord = CreateUserInput & {
   id: string;
   password_hash: string;
@@ -35,11 +46,24 @@ type ListUsersOptions = {
   queryParams: ListUsersQuery;
 };
 
+type UserChangeResult = {
+  before: ManagedUser;
+  after: ManagedUser;
+};
+
 const MANAGED_USER_SELECT_SQL = `
   SELECT id, username, display_name, role, is_enabled, created_at, updated_at
   FROM users
   WHERE id = ?
   LIMIT 1
+`;
+
+const MANAGED_USER_SELECT_FOR_UPDATE_SQL = `
+  SELECT id, username, display_name, role, is_enabled, created_at, updated_at
+  FROM users
+  WHERE id = ?
+  LIMIT 1
+  FOR UPDATE
 `;
 
 function toManagedUser(row: UserRow): ManagedUser {
@@ -93,7 +117,7 @@ async function listUsers({ includeAdmins, queryParams }: ListUsersOptions) {
   });
 }
 
-async function findUserById(userId: string): Promise<ManagedUser | undefined> {
+async function findUserDetailById(userId: string): Promise<UserDetail | undefined> {
   return query(async (qe) => {
     const rows = await qe.read<UserRow>(
       "execute",
@@ -102,7 +126,25 @@ async function findUserById(userId: string): Promise<ManagedUser | undefined> {
     );
     const row = rows[0];
 
-    return row ? toManagedUser(row) : undefined;
+    if (!row) {
+      return undefined;
+    }
+
+    const permissionRows = await qe.read<PermissionOverrideRow>(
+      "execute",
+      `
+        SELECT user_id, permission, effect
+        FROM user_permission_overrides
+        WHERE user_id = ?
+        ORDER BY permission ASC
+      `,
+      [userId],
+    );
+
+    return {
+      ...toManagedUser(row),
+      permission_overrides: toUserPermissionOverrides(permissionRows),
+    };
   });
 }
 
@@ -132,8 +174,25 @@ async function createUser(payload: CreateUserRecord): Promise<ManagedUser> {
   });
 }
 
-async function updateUser(payload: UpdateUserRecord): Promise<ManagedUser> {
+async function updateUserForTarget(
+  payload: UpdateUserRecord,
+  assertCanUpdateExisting: (role: Role) => void,
+  assertCanUpdateNext: (role: Role) => void,
+): Promise<UserChangeResult> {
   return transaction(async (qe) => {
+    const beforeRows = await qe.read<UserRow>(
+      "execute",
+      MANAGED_USER_SELECT_FOR_UPDATE_SQL,
+      [payload.id],
+    );
+    const beforeRow = beforeRows[0];
+
+    if (!beforeRow) throw createNotFoundError();
+
+    const before = toManagedUser(beforeRow);
+    assertCanUpdateExisting(before.role);
+    assertCanUpdateNext(payload.role);
+
     const assignments = ["username = ?", "display_name = ?", "role = ?", "is_enabled = ?"];
     const values: ExecuteValues = [
       payload.username,
@@ -166,12 +225,31 @@ async function updateUser(payload: UpdateUserRecord): Promise<ManagedUser> {
 
     if (!row) throw createNotFoundError();
 
-    return toManagedUser(row);
+    return {
+      before,
+      after: toManagedUser(row),
+    };
   });
 }
 
-async function updateUserStatus(userId: string, isEnabled: boolean): Promise<ManagedUser> {
+async function updateUserStatusForTarget(
+  userId: string,
+  isEnabled: boolean,
+  assertCanUpdate: (role: Role) => void,
+): Promise<UserChangeResult> {
   return transaction(async (qe) => {
+    const beforeRows = await qe.read<UserRow>(
+      "execute",
+      MANAGED_USER_SELECT_FOR_UPDATE_SQL,
+      [userId],
+    );
+    const beforeRow = beforeRows[0];
+
+    if (!beforeRow) throw createNotFoundError();
+
+    const before = toManagedUser(beforeRow);
+    assertCanUpdate(before.role);
+
     const mutation = await qe.mutate(
       "execute",
       `
@@ -189,18 +267,36 @@ async function updateUserStatus(userId: string, isEnabled: boolean): Promise<Man
 
     if (!row) throw createNotFoundError();
 
-    return toManagedUser(row);
+    return {
+      before,
+      after: toManagedUser(row),
+    };
   });
 }
 
-async function deleteUser(userId: string) {
+async function deleteUserForTarget(
+  userId: string,
+  assertCanDelete: (role: Role) => void,
+): Promise<ManagedUser> {
   return transaction(async (qe) => {
+    const beforeRows = await qe.read<UserRow>(
+      "execute",
+      MANAGED_USER_SELECT_FOR_UPDATE_SQL,
+      [userId],
+    );
+    const beforeRow = beforeRows[0];
+
+    if (!beforeRow) throw createNotFoundError();
+
+    const before = toManagedUser(beforeRow);
+    assertCanDelete(before.role);
+
     const mutation = await qe.mutate("execute", "DELETE FROM users WHERE id = ?;", [userId]);
 
     if (!mutation.ok) throw new DbError(mutation.error);
     if (mutation.result.affectedRows === 0) throw createNotFoundError();
 
-    return mutation;
+    return before;
   });
 }
 
@@ -214,13 +310,27 @@ function createNotFoundError(): DbError {
   });
 }
 
+function toUserPermissionOverrides(rows: PermissionOverrideRow[]): UserPermissionOverride[] {
+  return rows.flatMap((row) => {
+    if (!isPermission(row.permission) || !isPermissionEffect(row.effect)) {
+      return [];
+    }
+
+    return [{
+      user_id: row.user_id,
+      permission: row.permission,
+      effect: row.effect,
+    }];
+  });
+}
+
 const usersRepository = {
   createUser,
-  deleteUser,
-  findUserById,
+  deleteUserForTarget,
+  findUserDetailById,
   listUsers,
-  updateUser,
-  updateUserStatus,
+  updateUserForTarget,
+  updateUserStatusForTarget,
 };
 
 export { usersRepository };

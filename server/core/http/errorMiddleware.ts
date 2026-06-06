@@ -11,7 +11,7 @@ import {
     serializeClientError,
 } from "./responseFormat";
 
-export const errorMiddleware: ErrorRequestHandler = (error, req, res) => {
+export const errorMiddleware: ErrorRequestHandler = (error, req, res, _next) => {
     if (res.headersSent) return;
 
     const locale = resolveLocale(req);

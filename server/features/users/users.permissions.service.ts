@@ -10,7 +10,6 @@ import { AppError } from "@core/http";
 import { wsGateway } from "@core/realtime";
 import { usersPermissionsRepository } from "./users.permissions.repository";
 import { assertCanManagePermissions, canReadRole } from "./users.policy";
-import { usersRepository } from "./users.repository";
 
 async function updateUserPermissions(
   actor: ClientUser,
@@ -27,9 +26,13 @@ async function updateUserPermissions(
     );
   }
 
-  const user = await usersRepository.findUserById(userId);
+  const result = await usersPermissionsRepository.replaceUserPermissionOverridesForTarget(
+    userId,
+    payload.permission_overrides,
+    (role) => assertCanManagePermissions(actor, role),
+  );
 
-  if (!user) {
+  if (!result) {
     throw new AppError(
       404,
       "USER_NOT_FOUND",
@@ -38,17 +41,9 @@ async function updateUserPermissions(
     );
   }
 
-  assertCanManagePermissions(actor, user.role);
+  emitUserPermissionsUpdated(userId, result.role, exclude_socket_id);
 
-  const permission_overrides =
-    await usersPermissionsRepository.replaceUserPermissionOverrides(
-      user.id,
-      payload.permission_overrides,
-    );
-
-  emitUserPermissionsUpdated(user.id, user.role, exclude_socket_id);
-
-  return permission_overrides;
+  return result.permission_overrides;
 }
 
 function emitUserPermissionsUpdated(

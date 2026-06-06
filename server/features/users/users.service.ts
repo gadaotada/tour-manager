@@ -98,24 +98,26 @@ async function updateUser(
   payload: UpdateUserInput,
   exclude_socket_id: string | undefined,
 ): Promise<ManagedUser> {
-  const existingUser = await getTargetUser(actor, payload.id);
-
-  assertCanUpdateRole(actor, existingUser.role);
-  assertCanUpdateRole(actor, payload.role);
-
-  const user = await usersRepository.updateUser({
-    ...payload,
-    password_hash: payload.password ? await hash(payload.password) : undefined,
-  });
+  const { before, after } = await usersRepository.updateUserForTarget(
+    {
+      ...payload,
+      password_hash: payload.password ? await hash(payload.password) : undefined,
+    },
+    (role) => {
+      assertCanReadRole(actor, role);
+      assertCanUpdateRole(actor, role);
+    },
+    (role) => assertCanUpdateRole(actor, role),
+  );
 
   emitUserEvent(
     USER_REALTIME_EVENTS.UPDATE,
-    user.id,
-    [existingUser.role, user.role],
+    after.id,
+    [before.role, after.role],
     exclude_socket_id,
   );
 
-  return user;
+  return after;
 }
 
 async function updateUserStatus(
@@ -133,14 +135,18 @@ async function updateUserStatus(
     );
   }
 
-  const existingUser = await getTargetUser(actor, userId);
-  assertCanUpdateRole(actor, existingUser.role);
+  const { after } = await usersRepository.updateUserStatusForTarget(
+    userId,
+    isEnabled,
+    (role) => {
+      assertCanReadRole(actor, role);
+      assertCanUpdateRole(actor, role);
+    },
+  );
 
-  const user = await usersRepository.updateUserStatus(userId, isEnabled);
+  emitUserEvent(USER_REALTIME_EVENTS.STATUS_CHANGE, after.id, [after.role], exclude_socket_id);
 
-  emitUserEvent(USER_REALTIME_EVENTS.STATUS_CHANGE, user.id, [user.role], exclude_socket_id);
-
-  return user;
+  return after;
 }
 
 async function deleteUser(
@@ -157,33 +163,20 @@ async function deleteUser(
     );
   }
 
-  const existingUser = await getTargetUser(actor, userId);
-  assertCanDeleteRole(actor, existingUser.role);
+  const existingUser = await usersRepository.deleteUserForTarget(
+    userId,
+    (role) => {
+      assertCanReadRole(actor, role);
+      assertCanDeleteRole(actor, role);
+    },
+  );
 
-  await usersRepository.deleteUser(userId);
   emitUserEvent(
     USER_REALTIME_EVENTS.DELETE,
     existingUser.id,
     [existingUser.role],
     exclude_socket_id,
   );
-}
-
-async function getTargetUser(actor: ClientUser, userId: string): Promise<ManagedUser> {
-  const user = await usersRepository.findUserById(userId);
-
-  if (!user) {
-    throw new AppError(
-      404,
-      "USER_NOT_FOUND",
-      "errors.db.notFound",
-      "Record was not found.",
-    );
-  }
-
-  assertCanReadRole(actor, user.role);
-
-  return user;
 }
 
 const usersService = {

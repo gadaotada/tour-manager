@@ -18,6 +18,7 @@ const envSchema = z.object({
   DB_CONNECT_TIMEOUT: z.coerce.number().int().positive().default(10000), // 10 seconds
   DB_WAIT_FOR_CONNECTIONS: z.coerce.boolean().default(true),
   DB_CONNECTION_LIMIT: z.coerce.number().int().positive().default(10),
+  DB_IDLE_TIMEOUT: z.coerce.number().int().positive().default(10000), // 10 seconds
   DB_QUEUE_LIMIT: z.coerce.number().int().default(0), // 0 means no limit
   SESSION_SECRET: z.string().min(32).default("development-session-secret-change-before-production"),
   SESSION_COOKIE_NAME: z.string().min(1).default("tour_manager.sid"),
@@ -42,8 +43,10 @@ export const env = {
   dbPassword: parsedEnv.DB_PASSWORD,
   dbName: parsedEnv.DB_NAME,
   dbConnectTimeout: parsedEnv.DB_CONNECT_TIMEOUT,
+  dbMaxIdle: parsedEnv.DB_CONNECTION_LIMIT - 1,
   dbWaitForConnections: parsedEnv.DB_WAIT_FOR_CONNECTIONS,
   dbConnectionLimit: parsedEnv.DB_CONNECTION_LIMIT,
+  dbIdleTimeout: parsedEnv.DB_IDLE_TIMEOUT,
   dbQueueLimit: parsedEnv.DB_QUEUE_LIMIT,
   sessionSecret: parsedEnv.SESSION_SECRET,
   sessionCookieName: parsedEnv.SESSION_COOKIE_NAME,

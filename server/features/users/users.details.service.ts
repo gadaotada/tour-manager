@@ -1,12 +1,11 @@
 import type { ClientUser, UserDetail } from "@tour-manager/shared";
 
 import { AppError } from "@core/http";
-import { usersPermissionsRepository } from "./users.permissions.repository";
 import { assertCanReadRole } from "./users.policy";
 import { usersRepository } from "./users.repository";
 
 async function getUserDetail(actor: ClientUser, userId: string): Promise<UserDetail> {
-  const user = await usersRepository.findUserById(userId);
+  const user = await usersRepository.findUserDetailById(userId);
 
   if (!user) {
     throw new AppError(
@@ -19,13 +18,7 @@ async function getUserDetail(actor: ClientUser, userId: string): Promise<UserDet
 
   assertCanReadRole(actor, user.role);
 
-  const permission_overrides =
-    await usersPermissionsRepository.listUserPermissionOverrides(user.id);
-
-  return {
-    ...user,
-    permission_overrides,
-  };
+  return user;
 }
 
 const usersDetailsService = {

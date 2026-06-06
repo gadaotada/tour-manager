@@ -7,12 +7,13 @@ import { authRepository } from "./auth.repository";
 import { toClientUser } from "./auth.mapper";
 
 async function login(input: LoginInput): Promise<ClientUser> {
-  const user = await authRepository.findUserByUsername(input.username);
+  const result = await authRepository.findUserWithPermissionsByUsername(input.username);
 
-  if (!user) {
+  if (!result) {
     throw invalidCredentialsError();
   }
 
+  const { user, permission_overrides } = result;
   const isValidPassword = await verify(user.password_hash, input.password);
 
   if (!isValidPassword) {
@@ -23,23 +24,17 @@ async function login(input: LoginInput): Promise<ClientUser> {
     throw disabledUserError();
   }
 
-  return toClientUser(
-    user,
-    await authRepository.findUserPermissionOverrides(user.id),
-  );
+  return toClientUser(user, permission_overrides);
 }
 
 async function getCurrentUser(userId: string): Promise<ClientUser | null> {
-  const user = await authRepository.findUserById(userId);
+  const result = await authRepository.findUserWithPermissionsById(userId);
 
-  if (!user || !Boolean(user.is_enabled)) {
+  if (!result || !Boolean(result.user.is_enabled)) {
     return null;
   }
 
-  return toClientUser(
-    user,
-    await authRepository.findUserPermissionOverrides(user.id),
-  );
+  return toClientUser(result.user, result.permission_overrides);
 }
 
 const authService = {

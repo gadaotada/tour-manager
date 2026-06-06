@@ -19,8 +19,15 @@ type PermissionOverrideRow = {
   effect: string;
 };
 
-async function findUserByUsername(username: string): Promise<UserRow | null> {
-  return findUser(
+type UserWithPermissionOverrides = {
+  user: UserRow;
+  permission_overrides: PermissionOverride[];
+};
+
+async function findUserWithPermissionsByUsername(
+  username: string,
+): Promise<UserWithPermissionOverrides | null> {
+  return findUserWithPermissionOverrides(
     `
       SELECT id, username, password_hash, display_name, role, is_enabled, settings
       FROM users
@@ -31,8 +38,10 @@ async function findUserByUsername(username: string): Promise<UserRow | null> {
   );
 }
 
-async function findUserById(userId: string): Promise<UserRow | null> {
-  return findUser(
+async function findUserWithPermissionsById(
+  userId: string,
+): Promise<UserWithPermissionOverrides | null> {
+  return findUserWithPermissionOverrides(
     `
       SELECT id, username, password_hash, display_name, role, is_enabled, settings
       FROM users
@@ -43,42 +52,48 @@ async function findUserById(userId: string): Promise<UserRow | null> {
   );
 }
 
-async function findUserPermissionOverrides(
-  userId: string,
-): Promise<PermissionOverride[]> {
+async function findUserWithPermissionOverrides(
+  sql: string,
+  values: ExecuteValues,
+): Promise<UserWithPermissionOverrides | null> {
   return query(async (qe) => {
-    const rows = await qe.read<PermissionOverrideRow>(
+    const rows = await qe.read<UserRow>("execute", sql, values);
+    const user = rows[0];
+
+    if (!user) {
+      return null;
+    }
+
+    const permissionRows = await qe.read<PermissionOverrideRow>(
       "execute",
       `
         SELECT permission, effect
         FROM user_permission_overrides
         WHERE user_id = ?
       `,
-      [userId],
+      [user.id],
     );
 
-    return rows.flatMap((row) => {
-      if (!isPermission(row.permission) || !isPermissionEffect(row.effect)) {
-        return [];
-      }
-
-      return [{ permission: row.permission, effect: row.effect }];
-    });
+    return {
+      user,
+      permission_overrides: toPermissionOverrides(permissionRows),
+    };
   });
 }
 
-async function findUser(sql: string, values: ExecuteValues): Promise<UserRow | null> {
-  return query(async (qe) => {
-    const rows = await qe.read<UserRow>("execute", sql, values);
+function toPermissionOverrides(rows: PermissionOverrideRow[]): PermissionOverride[] {
+  return rows.flatMap((row) => {
+    if (!isPermission(row.permission) || !isPermissionEffect(row.effect)) {
+      return [];
+    }
 
-    return rows[0] ?? null;
+    return [{ permission: row.permission, effect: row.effect }];
   });
 }
 
 const authRepository = {
-  findUserById,
-  findUserByUsername,
-  findUserPermissionOverrides,
+  findUserWithPermissionsById,
+  findUserWithPermissionsByUsername,
 };
 
 export { authRepository, type UserRow };

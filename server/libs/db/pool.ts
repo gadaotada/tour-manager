@@ -11,6 +11,8 @@ const pool = createPool({
     connectTimeout: env.dbConnectTimeout,
     waitForConnections: env.dbWaitForConnections,
     connectionLimit: env.dbConnectionLimit,
+    idleTimeout: env.dbIdleTimeout,
+    maxIdle: env.dbMaxIdle,
     queueLimit: env.dbQueueLimit,
 });
 
