@@ -1,6 +1,7 @@
 import { wsGateway } from "@core/realtime";
 import { buildPaginatedResult, DB_ERROR_CODES, DB_ERROR_MESSAGE_KEYS, DbError } from "@libs/db";
 import {
+    type ClientUser,
     HOTEL_REALTIME_EVENTS,
     type ChangeHotelStatusInput,
     type CreateHotelInput,
@@ -11,6 +12,7 @@ import {
 } from "@tour-manager/shared";
 
 import { hotelsRepository } from "./hotels.repository";
+import { AuditLog } from "@libs/audit";
 
 function emitHotelEvent(
     event: HotelRealtimePayload["event"],
@@ -40,7 +42,7 @@ const hotelsService = {
         });
     },
 
-    createHotel: async (payload: CreateHotelInput, exclude_socket_id: string | undefined): Promise<Hotel> => {
+    createHotel: async (payload: CreateHotelInput, exclude_socket_id: string | undefined, actor: ClientUser): Promise<Hotel> => {
         const mutation = await hotelsRepository.createHotel(payload);
 
         if (!mutation.ok) throw new DbError(mutation.error);
@@ -58,23 +60,58 @@ const hotelsService = {
         }
 
         emitHotelEvent(HOTEL_REALTIME_EVENTS.CREATE, createdRow.id, exclude_socket_id);
+        AuditLog.record("CREATE", {
+            user_id: actor.id,
+            resource: "HOTELS",
+            resource_id: createdRow.id,
+            data: { name: createdRow.name, stars: createdRow.stars, address: createdRow.address },
+        });
 
         return createdRow;
     },
 
-    updateHotel: async (payload: UpdateHotelInput, exclude_socket_id: string | undefined) => {
-        await hotelsRepository.updateHotel(payload);
+    updateHotel: async (payload: UpdateHotelInput, exclude_socket_id: string | undefined, actor: ClientUser) => {
+        const { before } = await hotelsRepository.updateHotel(payload);
         emitHotelEvent(HOTEL_REALTIME_EVENTS.UPDATE, payload.id, exclude_socket_id);
+
+
+        if (before) {
+            AuditLog.record("UPDATE", {
+                user_id: actor.id,
+                resource: "HOTELS",
+                resource_id: payload.id,
+                data: {
+                    before,
+                    after: payload,
+                },
+            });
+        }
     },
 
-    changeHotelStatus: async (payload: ChangeHotelStatusInput, exclude_socket_id: string | undefined) => {
+    changeHotelStatus: async (payload: ChangeHotelStatusInput, exclude_socket_id: string | undefined, actor: ClientUser) => {
         await hotelsRepository.updateHotel(payload);
         emitHotelEvent(HOTEL_REALTIME_EVENTS.STATUS_CHANGE, payload.id, exclude_socket_id);
+
+        AuditLog.record("UPDATE", {
+            user_id: actor.id,
+            resource: "HOTELS",
+            resource_id: payload.id,
+            data: {
+                before: { is_active: !payload.is_active },
+                after: { is_active: payload.is_active },
+            },
+        });
     },
 
-    deleteHotel: async (hotelId: number, exclude_socket_id: string | undefined) => {
+    deleteHotel: async (hotelId: number, exclude_socket_id: string | undefined, actor: ClientUser) => {
         await hotelsRepository.deleteHotel(hotelId);
         emitHotelEvent(HOTEL_REALTIME_EVENTS.DELETE, hotelId, exclude_socket_id);
+
+        AuditLog.record("DELETE", {
+            user_id: actor.id,
+            resource: "HOTELS",
+            resource_id: hotelId,
+        });
     },
 };
 

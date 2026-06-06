@@ -26,7 +26,7 @@ const hotelsController = createAppController("/hotels")
         .schemas({ body: createHotelSchema })
         .use(requirePermission(PERMISSIONS.HOTELS.CREATE_ANY))
         .handle(async (ctx) => {
-            const hotel = await hotelsService.createHotel(ctx.parsed.body, ctx.origin_socket_id);
+            const hotel = await hotelsService.createHotel(ctx.parsed.body, ctx.origin_socket_id, ctx.user);
 
             ctx.reply.created({ data: hotel });
         })
@@ -35,7 +35,7 @@ const hotelsController = createAppController("/hotels")
         .schemas({ body: updateHotelSchema })
         .use(requirePermission(PERMISSIONS.HOTELS.UPDATE_ANY))
         .handle(async (ctx) => {
-            await hotelsService.updateHotel(ctx.parsed.body, ctx.origin_socket_id);
+            await hotelsService.updateHotel(ctx.parsed.body, ctx.origin_socket_id, ctx.user);
 
             ctx.reply.success({ data: true });
         })
@@ -49,7 +49,7 @@ const hotelsController = createAppController("/hotels")
                 version: body.version,
                 is_active: body.is_active,
             };
-            await hotelsService.changeHotelStatus(payload, ctx.origin_socket_id);
+            await hotelsService.changeHotelStatus(payload, ctx.origin_socket_id, ctx.user);
 
             ctx.reply.success({ data: true });
         })
@@ -59,7 +59,7 @@ const hotelsController = createAppController("/hotels")
         .use(requirePermission(PERMISSIONS.HOTELS.DELETE_ANY))
         .handle(async (ctx) => {
             const { id } = ctx.parsed.params;
-            await hotelsService.deleteHotel(id, ctx.origin_socket_id);
+            await hotelsService.deleteHotel(id, ctx.origin_socket_id, ctx.user);
 
             ctx.reply.noContent();
         });

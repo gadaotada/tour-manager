@@ -122,6 +122,9 @@ async function updateHotel(payload: UpdateHotelInput | ChangeHotelStatusInput) {
     const { sql, values } = buildGeneralUpdateSql(payload, "hotels");
 
     return transaction(async (qe) => {
+        const oldData = await qe.read<HotelRow>("execute", "SELECT * FROM hotels WHERE id = ? LIMIT 1;", [payload.id]);
+        const before = oldData[0] ? toHotel(oldData[0]) : undefined;
+
         const result = await mutateWithVersion(qe, {
             mode: "execute",
             sql,
@@ -130,7 +133,7 @@ async function updateHotel(payload: UpdateHotelInput | ChangeHotelStatusInput) {
             probeValues: [payload.id],
         });
 
-        return result;
+        return { mutation: result, before };
     });
 }
 
