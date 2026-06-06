@@ -10,6 +10,7 @@ import { AppError } from "@core/http";
 import { wsGateway } from "@core/realtime";
 import { usersPermissionsRepository } from "./users.permissions.repository";
 import { assertCanManagePermissions, canReadRole } from "./users.policy";
+import { AuditLog } from "@libs/audit";
 
 async function updateUserPermissions(
   actor: ClientUser,
@@ -42,6 +43,23 @@ async function updateUserPermissions(
   }
 
   emitUserPermissionsUpdated(userId, result.role, exclude_socket_id);
+
+  AuditLog.record("UPDATE", {
+    user_id: actor.id,
+    resource: "USERS",
+    resource_id: userId,
+    data: {
+      before: {
+        permission_overrides: result.before_permission_overrides.map(({ permission, effect }) => ({
+          permission,
+          effect,
+        })),
+      },
+      after: {
+        permission_overrides: payload.permission_overrides,
+      },
+    },
+  });
 
   return result.permission_overrides;
 }

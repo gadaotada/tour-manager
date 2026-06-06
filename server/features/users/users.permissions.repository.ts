@@ -26,6 +26,7 @@ type UserRoleRow = {
 };
 
 type ReplaceUserPermissionOverridesResult = {
+  before_permission_overrides: UserPermissionOverride[];
   permission_overrides: UserPermissionOverride[];
   role: Role;
 };
@@ -58,6 +59,17 @@ async function replaceUserPermissionOverridesForTarget(
 
     assertCanReplace(user.role);
 
+    const existingRows = await qe.read<PermissionOverrideRow>(
+      "execute",
+      `
+        SELECT user_id, permission, effect
+        FROM user_permission_overrides
+        WHERE user_id = ?
+        ORDER BY permission ASC
+      `,
+      [userId],
+    );
+
     const deleteMutation = await qe.mutate(
       "execute",
       "DELETE FROM user_permission_overrides WHERE user_id = ?",
@@ -88,6 +100,7 @@ async function replaceUserPermissionOverridesForTarget(
 
     return {
       role: user.role,
+      before_permission_overrides: toUserPermissionOverrides(existingRows),
       permission_overrides: toUserPermissionOverrides(
         overrides.map((override) => ({
           user_id: userId,

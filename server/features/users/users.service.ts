@@ -26,6 +26,7 @@ import {
   canReadRole,
 } from "./users.policy";
 import { usersRepository } from "./users.repository";
+import { AuditLog } from "@libs/audit";
 
 function emitUserEvent(
   event: UserRealtimePayload["event"],
@@ -81,14 +82,26 @@ async function createUser(
   assertCanCreateRole(actor, payload.role);
 
   const password_hash = await hash(payload.password);
+  const newUserId = randomUUID();
 
   const user = await usersRepository.createUser({
     ...payload,
-    id: randomUUID(),
+    id: newUserId,
     password_hash,
   });
 
   emitUserEvent(USER_REALTIME_EVENTS.CREATE, user.id, [user.role], exclude_socket_id);
+  AuditLog.record("CREATE", {
+    user_id: actor.id,
+    resource: "USERS",
+    resource_id: newUserId,
+    data: {
+      username: user.username,
+      display_name: user.display_name,
+      role: user.role,
+      is_enabled: user.is_enabled,
+    },
+  });
 
   return user;
 }
@@ -117,6 +130,26 @@ async function updateUser(
     exclude_socket_id,
   );
 
+  AuditLog.record("UPDATE", {
+    user_id: actor.id,
+    resource: "USERS",
+    resource_id: payload.id,
+    data: {
+      before: {
+        username: before.username,
+        display_name: before.display_name,
+        role: before.role,
+        is_enabled: before.is_enabled,
+      },
+      after: {
+        username: after.username,
+        display_name: after.display_name,
+        role: after.role,
+        is_enabled: after.is_enabled,
+      },
+    },
+  });
+
   return after;
 }
 
@@ -135,7 +168,7 @@ async function updateUserStatus(
     );
   }
 
-  const { after } = await usersRepository.updateUserStatusForTarget(
+  const { before, after } = await usersRepository.updateUserStatusForTarget(
     userId,
     isEnabled,
     (role) => {
@@ -145,6 +178,15 @@ async function updateUserStatus(
   );
 
   emitUserEvent(USER_REALTIME_EVENTS.STATUS_CHANGE, after.id, [after.role], exclude_socket_id);
+  AuditLog.record("UPDATE", {
+    user_id: actor.id,
+    resource: "USERS",
+    resource_id: userId,
+    data: {
+      before: { is_enabled: before.is_enabled },
+      after: { is_enabled: after.is_enabled },
+    },
+  });
 
   return after;
 }
@@ -177,6 +219,12 @@ async function deleteUser(
     [existingUser.role],
     exclude_socket_id,
   );
+
+  AuditLog.record("DELETE", {
+    user_id: actor.id,
+    resource: "USERS",
+    resource_id: userId,
+  });
 }
 
 const usersService = {
