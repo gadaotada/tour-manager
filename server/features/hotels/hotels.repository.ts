@@ -82,7 +82,7 @@ async function listHotels(queryParams: ListHotelsQuery) {
         const count = await qe.read<{ total: number }>("execute", countSql, countValues);
 
         return {
-            rows: rows.map(toHotel),
+            rows: rows.map((r) => toHotel(r)),
             total: count[0]?.total ?? 0,
         };
     });

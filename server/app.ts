@@ -9,6 +9,7 @@ import helmet from "helmet";
 import { registerControllers } from "@core/controllers";
 import { errorMiddleware, requestContextMiddleware } from "@core/http";
 import { clientVersionMiddleware, loadClientVersion } from "@core/versioning";
+import { auditController } from "./features/audit";
 import { authController } from "./features/auth";
 import { healthController } from "./features/health/health.controller";
 import { hotelsController } from "./features/hotels/hotels.controller";
@@ -43,6 +44,7 @@ export function createApp(): Express {
     app,
     [
       authController,
+      auditController,
       healthController,
       hotelsController,
       settingsUserController,

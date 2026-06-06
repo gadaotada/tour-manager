@@ -1,8 +1,7 @@
 import { query } from "@libs/db";
-import type { PERMISSIONS } from "@tour-manager/shared";
+import { AUDIT_ACTIONS, type AuditAction, type AuditResource } from "@tour-manager/shared";
 
-type AuditResource = Exclude<keyof typeof PERMISSIONS, "DASHBOARD"> | "OTHER";
-type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "OTHER";
+export { AUDIT_ACTIONS };
 
 interface AuditBasePayload {
     user_id: string;

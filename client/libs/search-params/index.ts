@@ -1,5 +1,6 @@
 export {
   normalizeBooleanSearchParam,
+  normalizeEnumSearchParam,
   normalizeIntegerSearchParam,
   normalizeStringSearchParam,
 } from "./search-params";
