@@ -18,6 +18,22 @@ const auditListSearch = createSortedListSearchNormalizer<ListAuditLogsQuery["sor
   sortByValues: AUDIT_SORT_BY_COLS,
 });
 
+const DEFAULT_AUDIT_LIST_FILTERS: AuditListFilters = {
+  action: "all",
+  resource: "all",
+  resource_id: "",
+  search: "",
+  user_id: "",
+};
+
+type AuditListFilters = {
+  action: "all" | AuditAction;
+  resource: "all" | AuditResource;
+  resource_id: string;
+  search: string;
+  user_id: string;
+};
+
 function normalizeAuditSearch(raw: Record<string, unknown>): ListAuditLogsQuery {
   const baseQuery = auditListSearch.normalizeBaseListSearch(raw);
   const search = normalizeStringSearchParam(raw.search);
@@ -36,6 +52,16 @@ function normalizeAuditSearch(raw: Record<string, unknown>): ListAuditLogsQuery 
   };
 }
 
+function auditQueryToFilters(query: ListAuditLogsQuery): AuditListFilters {
+  return {
+    action: query.action ?? "all",
+    resource: query.resource ?? "all",
+    resource_id: query.resource_id ?? "",
+    search: query.search ?? "",
+    user_id: query.user_id ?? "",
+  };
+}
+
 function normalizeOptionalEnumSearchParam<TValue extends string>(
   raw: unknown,
   values: readonly TValue[],
@@ -46,3 +72,8 @@ function normalizeOptionalEnumSearchParam<TValue extends string>(
 }
 
 export { normalizeAuditSearch };
+export {
+  DEFAULT_AUDIT_LIST_FILTERS,
+  auditQueryToFilters,
+  type AuditListFilters,
+};

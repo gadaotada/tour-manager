@@ -1,6 +1,6 @@
 import { authStore } from "@core/stores";
 import { AppPageLayout } from "@components/layouts";
-import { getCurrentUser } from "@features/login";
+import { getCurrentUser, useAuthRealtimeSync } from "@features/login";
 import { ensureRealtimeConnection } from "@libs/realtime";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
@@ -22,6 +22,8 @@ export const Route = createFileRoute("/_shell")({
 });
 
 function ShellRouteLayout() {
+  useAuthRealtimeSync();
+
   return (
     <AppPageLayout>
       <Outlet />

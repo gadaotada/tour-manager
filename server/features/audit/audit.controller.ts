@@ -7,7 +7,7 @@ const auditController = createAppController("/audit")
     .with(requireAuth)
 
     .GET("/list")
-        .use(requirePermission(PERMISSIONS.LOGS.READ_ANY))
+        .use(requirePermission(PERMISSIONS.AUDIT.READ_ANY))
         .schemas({ query: listAuditLogsQuerySchema })
         .handle(async (ctx) => {
             const audits = await auditService.listLogs(ctx.user, ctx.parsed.query);

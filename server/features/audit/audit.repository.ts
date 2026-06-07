@@ -1,6 +1,7 @@
 import { query } from "@libs/db";
 import type { ExecuteValues } from "mysql2";
 import {
+  type AuditLog,
   type AuditAction,
   type AuditResource,
   type ListAuditLogsQuery,
@@ -14,7 +15,7 @@ type AuditRow = {
   action: AuditAction;
   resource: AuditResource;
   resource_id: string | null;
-  data: Record<string, unknown>;
+  data: Record<string, unknown> | string | null;
   created_at: string;
 };
 
@@ -44,10 +45,39 @@ async function getAuditLogs(queryParams: ListAuditLogsQuery, options: ListAuditL
         const count = await qe.read<{ total: number }>("execute", countSql, countValues);
 
         return {
-            rows,
+            rows: rows.map(normalizeAuditRow),
             total: count[0]?.total ?? 0,
         };
     });
+}
+
+function normalizeAuditRow(row: AuditRow): AuditLog {
+    return {
+        ...row,
+        data: parseAuditData(row.data),
+    };
+}
+
+function parseAuditData(data: AuditRow["data"]): Record<string, unknown> {
+    if (isPlainRecord(data)) {
+        return data;
+    }
+
+    if (typeof data !== "string") {
+        return {};
+    }
+
+    try {
+        const parsed: unknown = JSON.parse(data);
+
+        return isPlainRecord(parsed) ? parsed : {};
+    } catch {
+        return {};
+    }
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function buildAuditLogsSql(queryParams: ListAuditLogsQuery, options: ListAuditLogsOptions): AuditLogsSql {

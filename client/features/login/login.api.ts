@@ -38,6 +38,20 @@ async function getCurrentUser(): Promise<ClientUser | null> {
   }
 }
 
+async function refreshCurrentUser(): Promise<ClientUser | null> {
+  const { setUser, clearUser } = authStore.getState();
+
+  try {
+    const { user } = await api.json.get<AuthUserResponse>("/api/auth/me");
+    setUser(user);
+
+    return user;
+  } catch {
+    clearUser();
+    return null;
+  }
+}
+
 async function logout(): Promise<void> {
   try {
     await api.json.post<null>("/api/auth/logout");
@@ -47,4 +61,4 @@ async function logout(): Promise<void> {
   }
 }
 
-export { getCurrentUser, login, logout };
+export { getCurrentUser, login, logout, refreshCurrentUser };

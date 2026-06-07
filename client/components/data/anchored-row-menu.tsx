@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { cn } from "@libs/utils";
@@ -26,17 +26,28 @@ function AnchoredRowMenu({
   tableViewport,
 }: AnchoredRowMenuProps) {
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const [menuHeight, setMenuHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    setMenuHeight(menuRef.current?.offsetHeight ?? 0);
+  }, [children]);
+
   const style = useMemo(() => {
     if (!tableViewport) return undefined;
 
     const cellRect = anchorCell.getBoundingClientRect();
     const viewportRect = tableViewport.getBoundingClientRect();
+    const measuredMenuHeight = menuHeight || 48;
+    const belowTop = cellRect.bottom - viewportRect.top + tableViewport.scrollTop + 4;
+    const aboveTop = cellRect.top - viewportRect.top + tableViewport.scrollTop - measuredMenuHeight - 4;
+    const availableBelow = viewportRect.bottom - cellRect.bottom;
+    const shouldOpenAbove = availableBelow < measuredMenuHeight + 4;
 
     return {
       left: cellRect.left - viewportRect.left + tableViewport.scrollLeft,
-      top: cellRect.bottom - viewportRect.top + tableViewport.scrollTop + 4,
+      top: shouldOpenAbove ? Math.max(tableViewport.scrollTop, aboveTop) : belowTop,
     };
-  }, [anchorCell, tableViewport]);
+  }, [anchorCell, menuHeight, tableViewport]);
 
   useEffect(() => {
     function closeOnOutsideClick(event: MouseEvent) {

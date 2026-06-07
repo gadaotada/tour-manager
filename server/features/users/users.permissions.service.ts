@@ -4,6 +4,7 @@ import {
   type UpdateUserPermissionsInput,
   type UserRealtimePayload,
   type UserPermissionOverride,
+  AUTH_REALTIME_EVENTS,
 } from "@tour-manager/shared";
 
 import { AppError } from "@core/http";
@@ -77,6 +78,11 @@ function emitUserPermissionsUpdated(
   wsGateway.emitToScope("users", payload, {
     exclude_socket_id,
     filter: (viewer) => canReadRole(viewer, role),
+  });
+
+  wsGateway.emitToUser(userId, {
+    event: AUTH_REALTIME_EVENTS.SESSION_CHANGE,
+    data: { reason: "permissions_changed" },
   });
 }
 

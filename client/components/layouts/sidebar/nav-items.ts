@@ -52,6 +52,7 @@ const operationsNavItems: NavItem[] = [
   {
     labelKey: "dashboard.nav.logs",
     icon: ScrollText,
+    permission: PERMISSIONS.AUDIT.READ_ANY,
     to: APP_PATHS.logs,
   },
   {
