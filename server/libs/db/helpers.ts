@@ -27,10 +27,13 @@ function buildGeneralUpdateSql<T extends BaseUpdateFields>(fields: T, tableName:
         WHERE id = ? AND version = ?;
     `.trim();
 
-    return {
-        sql,
-        values: [...safeEntries.map((entry) => entry.value), fields.id, fields.version] as ExecuteValues,
-    };
+    const values: ExecuteValues = [
+        ...safeEntries.map((entry) => entry.value),
+        fields.id,
+        fields.version,
+    ];
+
+    return { sql, values };
 }
 
 type PaginationFilter = {
@@ -49,17 +52,18 @@ type PaginationConfig = {
     filters?: PaginationFilter[];
 };
 
-function buildGeneralPaginatedSelectSql(tableName: string, cols: readonly string[], paginationConfig: PaginationConfig) {
+function buildGeneralPaginatedSelectSql(
+    tableName: string,
+    cols: readonly string[],
+    paginationConfig: PaginationConfig,
+) {
     const values: ExecuteValues = [];
     const countValues: ExecuteValues = [];
     const selectCols = cols.join(", ");
     const searchBy = paginationConfig.searchBy;
     const searchValue = paginationConfig.searchValue;
     const shouldSearch =
-        searchBy &&
-        searchBy.length > 0 &&
-        searchValue !== undefined &&
-        searchValue !== "";
+        searchBy && searchBy.length > 0 && searchValue !== undefined && searchValue !== "";
 
     let sql = `SELECT ${selectCols} FROM ${tableName}`;
     let countSql = `SELECT COUNT(*) AS total FROM ${tableName}`;

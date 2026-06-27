@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const UI_TABLE_NAMES = {
     HOTELS: "HOTELS",
+    CLIENTS: "CLIENTS",
     CONTRACTS: "CONTRACTS",
     TEMPLATES: "TEMPLATES",
     PAYMENTS: "PAYMENTS",
@@ -29,12 +30,7 @@ type UserSettings = {
     table_settings: Record<UITableName, TableSettings>;
 };
 
-const tablePageSizeSchema = z.union([
-    z.literal(10),
-    z.literal(25),
-    z.literal(50),
-    z.literal(100),
-]);
+const tablePageSizeSchema = z.union([z.literal(10), z.literal(25), z.literal(50), z.literal(100)]);
 
 const tableSettingsPatchSchema = z.object({
     page_size: tablePageSizeSchema.optional(),
@@ -47,6 +43,7 @@ const updateUserSettingsSchema = z.object({
     table_settings: z
         .object({
             [UI_TABLE_NAMES.HOTELS]: tableSettingsPatchSchema.optional(),
+            [UI_TABLE_NAMES.CLIENTS]: tableSettingsPatchSchema.optional(),
             [UI_TABLE_NAMES.CONTRACTS]: tableSettingsPatchSchema.optional(),
             [UI_TABLE_NAMES.TEMPLATES]: tableSettingsPatchSchema.optional(),
             [UI_TABLE_NAMES.PAYMENTS]: tableSettingsPatchSchema.optional(),
@@ -63,6 +60,10 @@ const DEFAULT_USER_SETTINGS = {
     language: "en",
     table_settings: {
         [UI_TABLE_NAMES.HOTELS]: {
+            page_size: DEFAULT_TABLE_PAGE_SIZE,
+            hidden_columns: [],
+        },
+        [UI_TABLE_NAMES.CLIENTS]: {
             page_size: DEFAULT_TABLE_PAGE_SIZE,
             hidden_columns: [],
         },
@@ -108,9 +109,7 @@ function cloneDefaultUserSettings(): UserSettings {
     };
 }
 
-function normalizeUserSettings(
-    settings: Partial<UserSettings> | null | undefined,
-): UserSettings {
+function normalizeUserSettings(settings: Partial<UserSettings> | null | undefined): UserSettings {
     const defaults = cloneDefaultUserSettings();
 
     if (!settings) {
@@ -123,8 +122,7 @@ function normalizeUserSettings(
                 ? settings.notifications_enabled
                 : defaults.notifications_enabled,
         language:
-            typeof settings.language === "string" &&
-            SUPPORTED_LOCALES.includes(settings.language)
+            typeof settings.language === "string" && SUPPORTED_LOCALES.includes(settings.language)
                 ? settings.language
                 : defaults.language,
         table_settings: normalizeTableSettings(settings.table_settings),

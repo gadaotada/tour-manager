@@ -44,6 +44,12 @@ export const healthService = {
 };
 ```
 
+## TypeScript Type Safety
+
+- Use type annotations and narrowed helper types before reaching for type assertions.
+- Avoid `as ...` when the same result can be expressed by annotating a variable, function return type, generic parameter, or exported helper type.
+- Keep unavoidable assertions local and explain them through the surrounding code shape; do not use assertions to silence mismatched domain types.
+
 ## Fallow Checks
 
 - Fallow is installed as a root dev dependency; run it with `npx --no-install fallow`.

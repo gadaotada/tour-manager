@@ -51,9 +51,7 @@ export {
     type RealtimeScopeActiveUsersEvent,
 } from "./libs/realtime";
 
-export {
-    safeJsonParser
-} from "./libs/validation";
+export { safeJsonParser } from "./libs/validation";
 
 export {
     SORT_DIRS,
@@ -73,10 +71,10 @@ export {
 } from "./schemas/common";
 
 export {
-    AUTH_REALTIME_EVENTS, 
-    type AuthRealtimeEvent, 
-    type AuthRealtimePayload 
-} from "./types/auth"
+    AUTH_REALTIME_EVENTS,
+    type AuthRealtimeEvent,
+    type AuthRealtimePayload,
+} from "./types/auth";
 
 export {
     HOTEL_SORT_BY_COLS,
@@ -88,6 +86,31 @@ export {
     updateHotelSchema,
     updateHotelStatusSchema,
 } from "./schemas/hotels";
+
+export {
+    CLIENT_SORT_BY_COLS,
+    clientCoreSchema,
+    clientIdParamsSchema,
+    clientRecordSchema,
+    createClientSchema,
+    listClientsQuerySchema,
+    updateClientSchema,
+} from "./schemas/clients";
+
+export {
+    CLIENT_REALTIME_EVENTS,
+    type Client,
+    type ClientCore,
+    type ClientIdParams,
+    type ClientRealtimeEvent,
+    type ClientRealtimePayload,
+    type ClientRecord,
+    type ClientsListQuery,
+    type ClientsListResult,
+    type CreateClientInput,
+    type ListClientsQuery,
+    type UpdateClientInput,
+} from "./types/clients";
 
 export {
     AUDIT_ACTIONS,
