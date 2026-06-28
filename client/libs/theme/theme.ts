@@ -8,6 +8,7 @@ const THEME_STORAGE_KEY = "tour-manager.ui.theme";
 
 type ValueOf<T> = T[keyof T];
 type UiTheme = ValueOf<typeof UI_THEMES>;
+type ResolvedUiTheme = Exclude<UiTheme, typeof UI_THEMES.SYSTEM>;
 
 const DEFAULT_UI_THEME = UI_THEMES.SYSTEM;
 
@@ -22,7 +23,7 @@ function normalizeUiTheme(value: unknown): UiTheme {
   return isUiTheme(value) ? value : DEFAULT_UI_THEME;
 }
 
-function resolveUiTheme(theme: UiTheme): "dark" | "light" {
+function resolveUiTheme(theme: UiTheme): ResolvedUiTheme {
   if (theme === UI_THEMES.SYSTEM) {
     return globalThis.matchMedia("(prefers-color-scheme: dark)").matches
       ? UI_THEMES.DARK
@@ -46,7 +47,9 @@ export {
   applyUiTheme,
   DEFAULT_UI_THEME,
   normalizeUiTheme,
+  resolveUiTheme,
   THEME_STORAGE_KEY,
   UI_THEMES,
+  type ResolvedUiTheme,
   type UiTheme,
 };

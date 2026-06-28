@@ -1,11 +1,11 @@
 import { PlaceholderPage } from "@components/pages/placeholder-page";
+import Editor from "@libs/suneditor";
 
 function TemplatesPage() {
   return (
-    <PlaceholderPage
-      emptyKey="pages.templates.empty"
-      titleKey="pages.templates.title"
-    />
+    <div className="">
+      <Editor />
+    </div>
   );
 }
 
